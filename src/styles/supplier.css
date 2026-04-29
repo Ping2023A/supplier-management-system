@@ -1,0 +1,119 @@
+.suppliers-page {
+  width: 100%;
+  height: 100%;
+  color: white;
+  overflow: hidden;
+}
+
+.supplier-top {
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.add-supplier-btn {
+  width: 180px;
+  height: 36px;
+  background: #2947a3;
+  color: white;
+  border: none;
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.supplier-actions {
+  display: flex;
+  gap: 120px;
+  margin-right: 95px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.supplier-summary {
+  margin-top: 16px;
+  height: 70px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+}
+
+.supplier-box {
+  padding: 16px;
+  font-size: 15px;
+  font-weight: 800;
+  position: relative;
+}
+
+.supplier-box.blue {
+  background: #2f4380;
+}
+
+.supplier-box.green {
+  background: #2c6b20;
+}
+
+.supplier-box.red {
+  background: #6d1f1f;
+}
+
+.alert-icon {
+  position: absolute;
+  right: 35px;
+  top: 5px;
+  font-size: 58px;
+  color: rgba(255, 110, 90, 0.22);
+}
+
+.supplier-table-wrapper {
+  margin-top: 20px;
+  height: calc(100vh - 90px - 18px - 44px - 16px - 70px - 20px);
+  overflow: hidden;
+}
+
+.supplier-table {
+  width: 100%;
+  height: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.supplier-table thead tr {
+  height: 40px;
+  background: #20201f;
+}
+
+.supplier-table th {
+  text-align: left;
+  padding-left: 18px;
+}
+
+.supplier-table tbody tr {
+  height: 36px;
+}
+
+.supplier-table tbody tr:nth-child(odd) {
+  background: #393a35;
+}
+
+.supplier-table tbody tr:nth-child(even) {
+  background: #20201f;
+}
+
+.supplier-table td {
+  padding-left: 18px;
+}
+
+.table-btn {
+  background: #2e2e2e;
+  color: white;
+  border: none;
+  padding: 5px 12px;
+  margin-right: 8px;
+  font-size: 10px;
+  font-weight: 700;
+  cursor: pointer;
+}
