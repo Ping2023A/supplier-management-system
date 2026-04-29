@@ -1,4 +1,4 @@
-.suppliers-page {
+.orders-page {
   width: 100%;
   height: 100%;
   color: white;
@@ -6,14 +6,14 @@
 }
 
 /* TOP BAR */
-.supplier-top {
+.orders-top {
   height: 44px;
   display: flex;
   align-items: center;
   justify-content: space-between;
 }
 
-.add-supplier-btn {
+.add-order-btn {
   width: 180px;
   height: 38px;
   background: #2947a3;
@@ -24,7 +24,7 @@
   cursor: pointer;
 }
 
-.supplier-actions {
+.orders-actions {
   display: flex;
   gap: 120px;
   margin-right: 95px;
@@ -33,7 +33,7 @@
 }
 
 /* SUMMARY */
-.supplier-summary {
+.orders-summary {
   margin-top: 18px;
   height: 70px;
   display: grid;
@@ -41,42 +41,33 @@
   gap: 28px;
 }
 
-.supplier-box {
+.order-box {
   padding: 16px;
   font-size: 15px;
   font-weight: 800;
-  position: relative;
 }
 
-.supplier-box.blue {
+.order-box.blue {
   background: #2f4380;
 }
 
-.supplier-box.green {
+.order-box.orange {
+  background: #c97035;
+}
+
+.order-box.green {
   background: #2c6b20;
 }
 
-.supplier-box.red {
-  background: #6d1f1f;
-}
-
-.alert-icon {
-  position: absolute;
-  right: 30px;
-  top: 8px;
-  font-size: 54px;
-  color: rgba(255, 110, 90, 0.25);
-}
-
 /* TABLE WRAPPER */
-.supplier-table-wrapper {
+.orders-table-wrapper {
   margin-top: 20px;
   height: calc(100vh - 100px - 18px - 44px - 18px - 70px - 40px);
   overflow: hidden;
 }
 
 /* TABLE */
-.supplier-table {
+.orders-table {
   width: 100%;
   border-collapse: collapse;
   table-layout: fixed;
@@ -85,41 +76,64 @@
 }
 
 /* HEADER */
-.supplier-table thead tr {
+.orders-table thead tr {
   height: 48px;
   background: #1c1c1c;
 }
 
-.supplier-table th {
+.orders-table th {
   padding: 0 20px;
   text-align: left;
 }
 
 /* ROWS */
-.supplier-table tbody tr {
+.orders-table tbody tr {
   height: 48px;
 }
 
-.supplier-table tbody tr:nth-child(odd) {
+.orders-table tbody tr:nth-child(odd) {
   background: #393a35;
 }
 
-.supplier-table tbody tr:nth-child(even) {
+.orders-table tbody tr:nth-child(even) {
   background: #20201f;
 }
 
-.supplier-table tbody tr:hover {
+.orders-table tbody tr:hover {
   background: #444;
 }
 
 /* CELLS */
-.supplier-table td {
+.orders-table td {
   padding: 0 20px;
   vertical-align: middle;
 }
 
+/* STATUS BADGES */
+.order-status {
+  display: inline-block;
+  min-width: 100px;
+  padding: 6px 12px;
+  text-align: center;
+  font-size: 12px;
+  font-weight: 800;
+  color: white;
+}
+
+.order-status.pending {
+  background: #c97035;
+}
+
+.order-status.approved {
+  background: #2f4380;
+}
+
+.order-status.completed {
+  background: #2c6b20;
+}
+
 /* BUTTONS */
-.table-btn {
+.order-table-btn {
   background: #2e2e2e;
   color: white;
   border: none;
@@ -130,6 +144,6 @@
   cursor: pointer;
 }
 
-.table-btn:hover {
+.order-table-btn:hover {
   background: #444;
 }

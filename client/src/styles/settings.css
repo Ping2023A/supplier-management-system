@@ -1,0 +1,210 @@
+.settings-page {
+  width: 100%;
+  height: 100%;
+  color: white;
+  overflow: auto;
+}
+
+/* TOP */
+.settings-top {
+  height: 44px;
+  display: flex;
+  align-items: center;
+}
+
+.add-user-btn {
+  width: 180px;
+  height: 38px;
+  background: #2947a3;
+  color: white;
+  border: none;
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+/* GRID */
+.settings-grid {
+  margin-top: 18px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 28px;
+}
+
+/* CARDS */
+.settings-card {
+  background: #20201f;
+  min-height: 155px;
+  padding: 14px;
+  overflow: hidden;
+}
+
+.settings-card h3,
+.settings-card-title {
+  margin: 0 0 12px;
+  font-size: 14px;
+  font-weight: 800;
+  border-bottom: 1px solid #777;
+  padding-bottom: 8px;
+}
+
+.settings-card-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* TABLES */
+.settings-table,
+.audit-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.settings-table thead tr,
+.audit-table thead tr {
+  height: 36px;
+  background: #1c1c1c;
+}
+
+.settings-table th,
+.settings-table td,
+.audit-table th,
+.audit-table td {
+  padding: 0 14px;
+  text-align: left;
+  vertical-align: middle;
+}
+
+.settings-table tbody tr,
+.audit-table tbody tr {
+  height: 32px;
+}
+
+.settings-table tbody tr:nth-child(odd),
+.audit-table tbody tr:nth-child(odd) {
+  background: #393a35;
+}
+
+.settings-table tbody tr:nth-child(even),
+.audit-table tbody tr:nth-child(even) {
+  background: #20201f;
+}
+
+/* ROWS */
+.settings-row {
+  height: 42px;
+  border-bottom: 1px solid #555;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.fraud-row {
+  height: 36px;
+  border-bottom: 1px solid #555;
+  display: flex;
+  align-items: center;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+/* BUTTONS */
+.mini-btn {
+  background: #2e2e2e;
+  color: white;
+  border: none;
+  padding: 5px 11px;
+  margin-left: 6px;
+  font-size: 10px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.view-alerts-btn {
+  width: 115px;
+  height: 28px;
+  margin-top: 10px;
+  background: #2947a3;
+  color: white;
+  border: none;
+  font-size: 11px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+/* STATUS */
+.user-status {
+  display: inline-block;
+  min-width: 70px;
+  padding: 4px 8px;
+  text-align: center;
+  font-size: 10px;
+  font-weight: 800;
+  color: white;
+}
+
+.user-status.active {
+  background: #2c6b20;
+}
+
+.user-status.inactive {
+  background: #d00000;
+}
+
+.warning-text {
+  color: #ffb000;
+  margin-left: 4px;
+}
+
+.success-text {
+  color: #15c957;
+  margin-left: 4px;
+}
+
+/* AUDIT */
+/* AUDIT */
+.audit-card {
+  min-height: 320px;
+  display: flex;
+  flex-direction: column;
+  overflow: visible;
+}
+
+/* TABLE takes space */
+.audit-card .audit-table {
+  display: block;
+  max-height: 180px;   /* 👈 limits table height */
+  overflow-y: auto;    /* 👈 scroll inside */
+}
+
+.pagination {
+  margin-top: 10px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 10px 0;
+}
+
+.pagination button {
+  min-width: 32px;
+  height: 32px;
+  background: #2e2e2e;
+  color: white;
+  border: none;
+  font-size: 12px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.pagination button:hover {
+  background: #444;
+}

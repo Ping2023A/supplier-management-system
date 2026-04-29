@@ -1,30 +1,46 @@
 import { NavLink } from "react-router-dom";
 
 const Sidebar = () => {
+  const linkClass = ({ isActive }) => (isActive ? "active" : "");
+
   return (
     <div className="sidebar">
-      <h2 className="logo">Supplier Management System</h2>
-
       <ul>
         <li>
-          <NavLink to="/" className={({ isActive }) => (isActive ? "active" : "")}>
+          <NavLink to="/" end className={linkClass}>
             Dashboard
           </NavLink>
         </li>
 
         <li>
-          <NavLink
-            to="/suppliers"
-            className={({ isActive }) => (isActive ? "active" : "")}
-          >
+          <NavLink to="/suppliers" className={linkClass}>
             Suppliers
           </NavLink>
         </li>
 
-        <li>Orders</li>
-        <li>Deliveries</li>
-        <li>Reports</li>
-        <li>Settings</li>
+        <li>
+          <NavLink to="/orders" className={linkClass}>
+            Orders
+          </NavLink>
+        </li>
+
+        <li>
+          <NavLink to="/deliveries" className={linkClass}>
+            Deliveries
+          </NavLink>
+        </li>
+
+        <li>
+          <NavLink to="/reports" className={linkClass}>
+            Reports
+          </NavLink>
+        </li>
+
+        <li>
+          <NavLink to="/settings" className={linkClass}>
+            Settings
+          </NavLink>
+        </li>
       </ul>
 
       <div className="logout">Log Out</div>

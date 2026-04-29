@@ -1,14 +1,14 @@
 import Sidebar from "../common/Sidebar";
 import Header from "../common/Header";
 
-const DashboardLayout = ({ children, activePage }) => {
+const DashboardLayout = ({ children }) => {
   return (
-    <div className="layout">
-      <Sidebar activePage={activePage} />
+    <div className="app-layout">
+      <Header />
 
-      <div className="main">
-        <Header />
-        <div className="content">{children}</div>
+      <div className="page-body">
+        <Sidebar />
+        <main className="content">{children}</main>
       </div>
     </div>
   );
