@@ -4,6 +4,42 @@ import "../../styles/supplier.css";
 
 const SuppliersPage = () => {
   const [suppliers, setSuppliers] = useState([]);
+ 
+  const [showModal, setShowModal] = useState(false);
+
+  const [newSupplier, setNewSupplier] = useState({
+    name: "",
+    contact: "",
+    location: "",
+    performance: "",
+    status: "Active",
+  });
+
+  const handleChange= (e) => {
+    setNewSupplier({
+      ...newSupplier,
+      [e.target.name]: e.target.value,
+    });
+  };
+
+    const handleAddSupplier = () => {
+    setSuppliers([
+      ...suppliers,
+      {
+        ...newSupplier,
+      },
+    ]);
+
+    setShowModal(false);
+
+    setNewSupplier({
+      name: "",
+      contact: "",
+      location: "",
+      performance: "",
+      status: "Active",
+    });
+  };
 
   useEffect(() => {
     axios
@@ -19,7 +55,7 @@ const SuppliersPage = () => {
   return (
     <div className="suppliers-page">
       <div className="supplier-top">
-        <button className="add-supplier-btn">Add Supplier</button>
+        <button className="add-supplier-btn" onClick={() => setShowModal(true)} >Add Supplier</button>
 
         <div className="supplier-actions">
           <span>🔍 Search</span>
@@ -83,6 +119,66 @@ const SuppliersPage = () => {
           </tbody>
         </table>
       </div>
+      
+      {/* MODAL */}
+      {showModal && (
+        <div className="modal-overlay">
+          <div className="modal">
+            <h2>Add Supplier</h2>
+
+            <input
+              type="text"
+              name="name"
+              placeholder="Supplier Name"
+              value={newSupplier.name}
+              onChange={handleChange}
+            />
+
+            <input
+              type="text"
+              name="contact"
+              placeholder="Contact Person"
+              value={newSupplier.contact}
+              onChange={handleChange}
+            />
+
+             <input
+              type="text"
+              name="location"
+              placeholder="Location"
+              value={newSupplier.location}
+              onChange={handleChange}
+            />
+
+            <input
+              type="text"
+              name="performance"
+              placeholder="Performance"
+              value={newSupplier.performance}
+              onChange={handleChange}
+            />
+
+            <select
+              name="status"
+              value={newSupplier.status}
+              onChange={handleChange}
+            >
+              <option value="Active">Active</option>
+              <option value="At Risk">At Risk</option>
+            </select>
+
+             <div className="modal-buttons">
+              <button onClick={handleAddSupplier}>
+                Save
+              </button>
+
+              <button onClick={() => setShowModal(false)}>
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
