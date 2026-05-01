@@ -1,7 +1,14 @@
-import { NavLink } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 
 const Sidebar = () => {
+  const navigate = useNavigate();
+
   const linkClass = ({ isActive }) => (isActive ? "active" : "");
+
+  const handleLogout = () => {
+    localStorage.removeItem("isAuth"); // clear login
+    navigate("/login"); // redirect to login
+  };
 
   return (
     <div className="sidebar">
@@ -43,7 +50,10 @@ const Sidebar = () => {
         </li>
       </ul>
 
-      <div className="logout">Log Out</div>
+      {/* LOGOUT */}
+      <div className="logout" onClick={handleLogout}>
+        Log Out
+      </div>
     </div>
   );
 };

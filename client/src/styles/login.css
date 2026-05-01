@@ -1,0 +1,113 @@
+/* PAGE */
+.login-page {
+  height: 100vh;
+  width: 100%;
+  background: #2f2f2f; /* dark background */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* CONTAINER */
+.login-container {
+  width: 360px;
+  background: #2a2a2a;
+  padding: 30px 28px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  color: white;
+}
+
+/* LOGO */
+.login-logo {
+  width: 70px;
+  height: 70px;
+  object-fit: contain;
+  margin-bottom: 10px;
+}
+
+/* TITLE */
+.login-container h2 {
+  font-size: 16px;
+  font-weight: 800;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+/* FORM */
+.login-container form {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* INPUTS */
+.login-container input,
+.login-container select {
+  height: 36px;
+  padding: 0 10px;
+  border: none;
+  background: #3a3a3a;
+  color: white;
+  font-size: 12px;
+  outline: none;
+}
+
+/* PLACEHOLDER */
+.login-container input::placeholder {
+  color: #bbb;
+}
+
+/* SELECT */
+.login-container select {
+  cursor: pointer;
+}
+
+/* REMEMBER */
+.remember {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+}
+
+.remember input {
+  width: 14px;
+  height: 14px;
+}
+
+/* BUTTON */
+.login-btn {
+  margin-top: 5px;
+  height: 38px;
+  background: #2947a3;
+  color: white;
+  border: none;
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.login-btn:hover {
+  background: #1f3a8a;
+}
+
+/* LINKS */
+.login-links {
+  margin-top: 14px;
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  font-size: 11px;
+  color: #ccc;
+}
+
+.login-links span {
+  cursor: pointer;
+}
+
+.login-links span:hover {
+  text-decoration: underline;
+}
