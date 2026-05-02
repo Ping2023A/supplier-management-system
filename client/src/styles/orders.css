@@ -364,3 +364,16 @@
 .search-input::placeholder {
   color: #bbb;
 }
+
+.filter-select {
+  padding: 8px 12px;
+
+  border: none;
+  border-radius: 5px;
+
+  background: #2f2f2f;
+  color: white;
+
+  outline: none;
+  cursor: pointer;
+}

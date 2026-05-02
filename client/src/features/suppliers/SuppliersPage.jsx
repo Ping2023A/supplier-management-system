@@ -4,9 +4,9 @@ import "../../styles/supplier.css";
 
 const SuppliersPage = () => {
   const [suppliers, setSuppliers] = useState([]);
- 
   const [showModal, setShowModal] = useState(false);
-
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filterStatus, setFilterStatus] = useState("All");
   const [newSupplier, setNewSupplier] = useState({
     name: "",
     contact: "",
@@ -15,14 +15,14 @@ const SuppliersPage = () => {
     status: "Active",
   });
 
-  const handleChange= (e) => {
+  const handleChange = (e) => {
     setNewSupplier({
       ...newSupplier,
       [e.target.name]: e.target.value,
     });
   };
 
-    const handleAddSupplier = () => {
+  const handleAddSupplier = () => {
     setSuppliers([
       ...suppliers,
       {
@@ -40,7 +40,25 @@ const SuppliersPage = () => {
       status: "Active",
     });
   };
+  const handleDeleteSupplier = (indexToDelete) => {
+    const updatedSuppliers = suppliers.filter(
+      (_, index) => index !== indexToDelete
+    );
 
+    setSuppliers(updatedSuppliers);
+  };
+
+  const filteredSuppliers = suppliers.filter((supplier) => {
+    const matchesSearch =
+      supplier.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      supplier.contact.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      supplier.location.toLowerCase().includes(searchTerm.toLowerCase());
+
+    const matchesFilter =
+      filterStatus === "All" || supplier.status === filterStatus;
+
+    return matchesSearch && matchesFilter;
+  });
   useEffect(() => {
     axios
       .get("http://localhost:5000/api/suppliers")
@@ -58,8 +76,23 @@ const SuppliersPage = () => {
         <button className="add-supplier-btn" onClick={() => setShowModal(true)} >Add Supplier</button>
 
         <div className="supplier-actions">
-          <span>🔍 Search</span>
-          <span>Filter</span>
+         <input
+            type="text"
+            placeholder="Search supplier..."
+            className="search-input"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+
+          <select
+            className="filter-select"
+            value={filterStatus}
+            onChange={(e) => setFilterStatus(e.target.value)}
+          >
+            <option value="All">All</option>
+            <option value="Active">Active</option>
+            <option value="At Risk">At Risk</option>
+          </select>
         </div>
       </div>
 
@@ -119,7 +152,7 @@ const SuppliersPage = () => {
           </tbody>
         </table>
       </div>
-      
+
       {/* MODAL */}
       {showModal && (
         <div className="modal-overlay">
@@ -142,7 +175,7 @@ const SuppliersPage = () => {
               onChange={handleChange}
             />
 
-             <input
+            <input
               type="text"
               name="location"
               placeholder="Location"
@@ -167,7 +200,7 @@ const SuppliersPage = () => {
               <option value="At Risk">At Risk</option>
             </select>
 
-             <div className="modal-buttons">
+            <div className="modal-buttons">
               <button onClick={handleAddSupplier}>
                 Save
               </button>

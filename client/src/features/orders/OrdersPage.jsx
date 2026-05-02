@@ -13,6 +13,7 @@ const OrdersPage = () => {
   const [showViewModal, setShowViewModal] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [searchTerm, setsearchTerm] = useState("");
+  const [filterStatus, setFilterStatus] = useState("All");
   const [newOrder, setNewOrder] = useState({
     supplier: "",
     item: "",
@@ -67,14 +68,20 @@ const OrdersPage = () => {
     );
   };
 
-  const filteredOrders = orders.filter((order) =>
-  order.some((field) =>
-    field
-      .toString()
-      .toLowerCase()
-      .includes(searchTerm.toLowerCase())
-  )
-);
+  const filteredOrders = orders.filter((order) => {
+    const matchesSearch = order.some((field) =>
+      field
+        .toString()
+        .toLowerCase()
+        .includes(searchTerm.toLowerCase())
+    );
+
+    const matchesFilter =
+      filterStatus === "All" ||
+      order[4] === filterStatus;
+
+    return matchesSearch && matchesFilter;
+  });
 
   return (
     <div className="orders-page">
@@ -96,7 +103,19 @@ const OrdersPage = () => {
               setSearchTerm(e.target.value)
             }
           />
-          <span>Filter</span>
+          <select
+            className="filter-select"
+            value={filterStatus}
+            onChange={(e) =>
+              setFilterStatus(e.target.value)
+            }
+          >
+            <option value="All">All</option>
+            <option value="Pending">Pending</option>
+            <option value="Approved">Approved</option>
+            <option value="In Transit">In Transit</option>
+            <option value="Delivered">Delivered</option>
+          </select>
         </div>
       </div>
 
