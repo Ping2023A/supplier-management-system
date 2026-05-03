@@ -17,11 +17,35 @@ const SettingsPage = () => {
     ["2024-04-11", "Admin User", "Security Settings Changed"],
   ]);
 
+  const [alerts] = useState([
+    {
+      id: 1,
+      type: "Suspicious Payment",
+      supplier: "ABC Supplies",
+      amount: "$12,500",
+      status: "Pending Review",
+    },
+    {
+      id: 2,
+      type: "Multiple Failed Transactions",
+      supplier: "Global Traders",
+      amount: "$8,200",
+      status: "Investigating",
+    },
+  ]);
+
   const [page, setPage] = useState(1);
   const logsPerPage = 3;
 
   const [modalOpen, setModalOpen] = useState(false);
   const [editIndex, setEditIndex] = useState(null);
+
+  const [alertModal, setAlertModal] = useState(false);
+  const [passwordModal, setPasswordModal] = useState(false);
+  const [twoFactorModal, setTwoFactorModal] = useState(false);
+  const [accessLogsModal, setAccessLogsModal] = useState(false);
+
+  const [twoFactorEnabled, setTwoFactorEnabled] = useState(false);
 
   const [form, setForm] = useState({
     name: "",
@@ -29,16 +53,15 @@ const SettingsPage = () => {
     status: "Active",
   });
 
+  const [passwordForm, setPasswordForm] = useState({
+    currentPassword: "",
+    newPassword: "",
+    confirmPassword: "",
+  });
+
   const openAddModal = () => {
     setForm({ name: "", role: "", status: "Active" });
     setEditIndex(null);
-    setModalOpen(true);
-  };
-
-  const openEditModal = (index) => {
-    const user = users[index];
-    setForm(user);
-    setEditIndex(index);
     setModalOpen(true);
   };
 
@@ -56,19 +79,43 @@ const SettingsPage = () => {
     setModalOpen(false);
   };
 
-  const deleteUser = (index) => {
-    const updated = users.filter((_, i) => i !== index);
-    setUsers(updated);
-  };
-
   const logsStart = (page - 1) * logsPerPage;
   const paginatedLogs = auditLogs.slice(logsStart, logsStart + logsPerPage);
   const totalPages = Math.ceil(auditLogs.length / logsPerPage);
 
+  const updatePassword = () => {
+    if (
+      !passwordForm.currentPassword ||
+      !passwordForm.newPassword ||
+      !passwordForm.confirmPassword
+    ) {
+      alert("Please complete all fields.");
+      return;
+    }
+
+    if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+      alert("Passwords do not match.");
+      return;
+    }
+
+    alert("Password updated successfully!");
+    setPasswordModal(false);
+
+    setPasswordForm({
+      currentPassword: "",
+      newPassword: "",
+      confirmPassword: "",
+    });
+  };
+
+  const toggleTwoFactor = () => {
+    setTwoFactorEnabled(!twoFactorEnabled);
+  };
+
   return (
     <div className="settings-page">
 
-      {/* TOP BAR (like Reports page) */}
+      {/* TOP BAR */}
       <div className="settings-top">
         <button className="add-user-btn" onClick={openAddModal}>
           Add User
@@ -77,7 +124,7 @@ const SettingsPage = () => {
 
       <div className="settings-grid">
 
-        {/* USERS TABLE */}
+        {/* USER MANAGEMENT */}
         <div className="settings-card">
           <div className="settings-card-title">
             <span>User Management</span>
@@ -89,7 +136,6 @@ const SettingsPage = () => {
                 <th>Name</th>
                 <th>Role</th>
                 <th>Status</th>
-                <th>Actions</th>
               </tr>
             </thead>
 
@@ -98,6 +144,7 @@ const SettingsPage = () => {
                 <tr key={index}>
                   <td>{user.name}</td>
                   <td>{user.role}</td>
+
                   <td>
                     <span
                       className={`user-status ${
@@ -107,48 +154,51 @@ const SettingsPage = () => {
                       {user.status}
                     </span>
                   </td>
-
-                  <td>
-                    <button className="mini-btn" onClick={() => openEditModal(index)}>
-                      Edit
-                    </button>
-                    <button className="mini-btn" onClick={() => deleteUser(index)}>
-                      Remove
-                    </button>
-                    <button
-                      className="mini-btn"
-                      onClick={() => alert(JSON.stringify(user, null, 2))}
-                    >
-                      View
-                    </button>
-                  </td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
 
-        {/* SECURITY */}
+        {/* SECURITY SETTINGS */}
         <div className="settings-card">
           <h3>Security Settings</h3>
 
           <div className="settings-row">
             <span>Change Password</span>
-            <button className="mini-btn">Update</button>
+
+            <button
+              className="mini-btn"
+              onClick={() => setPasswordModal(true)}
+            >
+              Update
+            </button>
           </div>
 
           <div className="settings-row">
             <span>Two-Factor Authentication</span>
-            <button className="mini-btn">Update</button>
+
+            <button
+              className="mini-btn"
+              onClick={() => setTwoFactorModal(true)}
+            >
+              Update
+            </button>
           </div>
 
           <div className="settings-row">
             <span>Access Logs</span>
-            <button className="mini-btn">View</button>
+
+            <button
+              className="mini-btn"
+              onClick={() => setAccessLogsModal(true)}
+            >
+              View
+            </button>
           </div>
         </div>
 
-        {/* FRAUD */}
+        {/* FRAUD DETECTION */}
         <div className="settings-card fraud-card">
           <h3>Fraud Detection</h3>
 
@@ -167,7 +217,12 @@ const SettingsPage = () => {
             <span className="success-text">Active</span>
           </div>
 
-          <button className="view-alerts-btn">View Alerts</button>
+          <button
+            className="view-alerts-btn"
+            onClick={() => setAlertModal(true)}
+          >
+            View Alerts
+          </button>
         </div>
 
         {/* AUDIT LOGS */}
@@ -194,7 +249,7 @@ const SettingsPage = () => {
             </tbody>
           </table>
 
-          {/* PAGINATION (CLICKABLE FIX) */}
+          {/* PAGINATION */}
           <div className="pagination">
             {Array.from({ length: totalPages }, (_, i) => (
               <button
@@ -217,11 +272,11 @@ const SettingsPage = () => {
         </div>
       </div>
 
-      {/* MODAL (ADD / EDIT USER) */}
+      {/* ADD USER MODAL */}
       {modalOpen && (
         <div className="modal-overlay">
           <div className="report-modal">
-            <h3>{editIndex !== null ? "Edit User" : "Add User"}</h3>
+            <h3>Add User</h3>
 
             <input
               className="search-input"
@@ -250,7 +305,174 @@ const SettingsPage = () => {
               <button className="save-btn" onClick={saveUser}>
                 Save
               </button>
-              <button className="close-btn" onClick={() => setModalOpen(false)}>
+
+              <button
+                className="close-btn"
+                onClick={() => setModalOpen(false)}
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* FRAUD ALERTS MODAL */}
+      {alertModal && (
+        <div className="modal-overlay">
+          <div className="report-modal">
+            <h3>Fraud Alerts</h3>
+
+            {alerts.map((alert) => (
+              <div
+                key={alert.id}
+                style={{
+                  background: "#2e2e2e",
+                  padding: "12px",
+                  marginBottom: "12px",
+                  borderRadius: "6px",
+                }}
+              >
+                <p><strong>Type:</strong> {alert.type}</p>
+                <p><strong>Supplier:</strong> {alert.supplier}</p>
+                <p><strong>Amount:</strong> {alert.amount}</p>
+                <p><strong>Status:</strong> {alert.status}</p>
+              </div>
+            ))}
+
+            <div className="modal-buttons">
+              <button
+                className="close-btn"
+                onClick={() => setAlertModal(false)}
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* CHANGE PASSWORD MODAL */}
+      {passwordModal && (
+        <div className="modal-overlay">
+          <div className="report-modal">
+            <h3>Change Password</h3>
+
+            <input
+              type="password"
+              className="search-input"
+              placeholder="Current Password"
+              value={passwordForm.currentPassword}
+              onChange={(e) =>
+                setPasswordForm({
+                  ...passwordForm,
+                  currentPassword: e.target.value,
+                })
+              }
+            />
+
+            <input
+              type="password"
+              className="search-input"
+              placeholder="New Password"
+              value={passwordForm.newPassword}
+              onChange={(e) =>
+                setPasswordForm({
+                  ...passwordForm,
+                  newPassword: e.target.value,
+                })
+              }
+            />
+
+            <input
+              type="password"
+              className="search-input"
+              placeholder="Confirm Password"
+              value={passwordForm.confirmPassword}
+              onChange={(e) =>
+                setPasswordForm({
+                  ...passwordForm,
+                  confirmPassword: e.target.value,
+                })
+              }
+            />
+
+            <div className="modal-buttons">
+              <button className="save-btn" onClick={updatePassword}>
+                Update
+              </button>
+
+              <button
+                className="close-btn"
+                onClick={() => setPasswordModal(false)}
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* TWO FACTOR MODAL */}
+      {twoFactorModal && (
+        <div className="modal-overlay">
+          <div className="report-modal">
+            <h3>Two-Factor Authentication</h3>
+
+            <p style={{ marginBottom: "20px" }}>
+              Current Status:
+              <strong>
+                {twoFactorEnabled ? " Enabled" : " Disabled"}
+              </strong>
+            </p>
+
+            <div className="modal-buttons">
+              <button className="save-btn" onClick={toggleTwoFactor}>
+                {twoFactorEnabled ? "Disable" : "Enable"}
+              </button>
+
+              <button
+                className="close-btn"
+                onClick={() => setTwoFactorModal(false)}
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ACCESS LOGS MODAL */}
+      {accessLogsModal && (
+        <div className="modal-overlay">
+          <div className="report-modal">
+            <h3>Access Logs</h3>
+
+            <table className="audit-table">
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>User</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+
+              <tbody>
+                {auditLogs.map((log, index) => (
+                  <tr key={index}>
+                    <td>{log[0]}</td>
+                    <td>{log[1]}</td>
+                    <td>{log[2]}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+
+            <div className="modal-buttons">
+              <button
+                className="close-btn"
+                onClick={() => setAccessLogsModal(false)}
+              >
                 Close
               </button>
             </div>
