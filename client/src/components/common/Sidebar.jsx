@@ -6,7 +6,9 @@ const Sidebar = () => {
   const linkClass = ({ isActive }) => (isActive ? "active" : "");
 
   const handleLogout = () => {
-    localStorage.removeItem("isAuth"); // clear login
+    // Clear token and role
+    localStorage.removeItem("token");
+    localStorage.removeItem("role");
     navigate("/login"); // redirect to login
   };
 
@@ -14,37 +16,37 @@ const Sidebar = () => {
     <div className="sidebar">
       <ul>
         <li>
-          <NavLink to="/" end className={linkClass}>
+          <NavLink to="/dashboard" end className={linkClass}>
             Dashboard
           </NavLink>
         </li>
 
         <li>
-          <NavLink to="/suppliers" className={linkClass}>
+          <NavLink to="/dashboard/suppliers" className={linkClass}>
             Suppliers
           </NavLink>
         </li>
 
         <li>
-          <NavLink to="/orders" className={linkClass}>
+          <NavLink to="/dashboard/orders" className={linkClass}>
             Orders
           </NavLink>
         </li>
 
         <li>
-          <NavLink to="/deliveries" className={linkClass}>
+          <NavLink to="/dashboard/deliveries" className={linkClass}>
             Deliveries
           </NavLink>
         </li>
 
         <li>
-          <NavLink to="/reports" className={linkClass}>
+          <NavLink to="/dashboard/reports" className={linkClass}>
             Reports
           </NavLink>
         </li>
 
         <li>
-          <NavLink to="/settings" className={linkClass}>
+          <NavLink to="/dashboard/settings" className={linkClass}>
             Settings
           </NavLink>
         </li>

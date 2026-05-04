@@ -1,39 +1,39 @@
 const Order = require("../models/Order");
 
 // GET all orders
-exports.getOrders = async (req, res) => {
+exports.getOrders = async (req, res, next) => {
   try {
     const orders = await Order.find().populate("supplier", "name contact");
     res.json(orders);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
+  } catch (err) {
+    next(err); // forward to errorHandler
   }
 };
 
 // GET single order
-exports.getOrderById = async (req, res) => {
+exports.getOrderById = async (req, res, next) => {
   try {
     const order = await Order.findById(req.params.id).populate("supplier", "name contact");
     if (!order) return res.status(404).json({ message: "Order not found" });
     res.json(order);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
+  } catch (err) {
+    next(err);
   }
 };
 
 // CREATE order
-exports.createOrder = async (req, res) => {
+exports.createOrder = async (req, res, next) => {
   try {
     const order = new Order(req.body);
     const savedOrder = await order.save();
     res.status(201).json(savedOrder);
-  } catch (error) {
-    res.status(400).json({ message: error.message });
+  } catch (err) {
+    next(err);
   }
 };
 
 // UPDATE order
-exports.updateOrder = async (req, res) => {
+exports.updateOrder = async (req, res, next) => {
   try {
     const updatedOrder = await Order.findByIdAndUpdate(
       req.params.id,
@@ -42,18 +42,18 @@ exports.updateOrder = async (req, res) => {
     );
     if (!updatedOrder) return res.status(404).json({ message: "Order not found" });
     res.json(updatedOrder);
-  } catch (error) {
-    res.status(400).json({ message: error.message });
+  } catch (err) {
+    next(err);
   }
 };
 
 // DELETE order
-exports.deleteOrder = async (req, res) => {
+exports.deleteOrder = async (req, res, next) => {
   try {
     const deletedOrder = await Order.findByIdAndDelete(req.params.id);
     if (!deletedOrder) return res.status(404).json({ message: "Order not found" });
     res.json({ message: "Order removed" });
-  } catch (error) {
-    res.status(500).json({ message: error.message });
+  } catch (err) {
+    next(err);
   }
 };

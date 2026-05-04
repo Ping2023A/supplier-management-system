@@ -8,9 +8,11 @@ const deliveryRoutes = require("./routes/deliveryRoutes");
 const dashboardRoutes = require("./routes/dashboardRoutes");
 const reportRoutes = require("./routes/reportRoutes");
 const settingsRoutes = require("./routes/settingsRoutes");
+const authRoutes = require("./routes/authRoutes");
 
 // Import middleware
 const errorHandler = require("./middlewares/errorMiddleware");
+const auth = require("./middlewares/authMiddleware");
 
 const app = express();
 
@@ -18,15 +20,18 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// API routes
-app.use("/api/suppliers", supplierRoutes);
-app.use("/api/orders", orderRoutes);
-app.use("/api/deliveries", deliveryRoutes);
-app.use("/api/dashboard", dashboardRoutes);
-app.use("/api/reports", reportRoutes);
-app.use("/api/settings", settingsRoutes);
+// Public routes
+app.use("/api/auth", authRoutes);
 
-// Error handling middleware
+// Protected routes
+//app.use("/api/suppliers", auth, supplierRoutes);
+//app.use("/api/orders", auth, orderRoutes);
+//app.use("/api/deliveries", auth, deliveryRoutes);
+//app.use("/api/dashboard", auth, dashboardRoutes);
+//app.use("/api/reports", auth, reportRoutes);
+//app.use("/api/settings", auth, settingsRoutes);
+
+// Error handling middleware (must be last)
 app.use(errorHandler);
 
 module.exports = app;

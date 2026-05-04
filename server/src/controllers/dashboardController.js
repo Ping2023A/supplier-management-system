@@ -4,7 +4,7 @@ const Delivery = require("../models/Delivery");
 const StockAlert = require("../models/StockAlert");
 
 // GET system overview
-exports.getOverview = async (req, res) => {
+exports.getOverview = async (req, res, next) => {
   try {
     const supplierCount = await Supplier.countDocuments();
     const orderCount = await Order.countDocuments();
@@ -17,27 +17,27 @@ exports.getOverview = async (req, res) => {
       deliveries: deliveryCount,
       stockAlerts
     });
-  } catch (error) {
-    res.status(500).json({ message: error.message });
+  } catch (err) {
+    next(err); // forward to errorHandler
   }
 };
 
 // GET supplier performance metrics
-exports.getPerformance = async (req, res) => {
+exports.getPerformance = async (req, res, next) => {
   try {
     const suppliers = await Supplier.find({}, "name performance status");
     res.json(suppliers);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
+  } catch (err) {
+    next(err);
   }
 };
 
 // GET stock and delivery alerts
-exports.getAlerts = async (req, res) => {
+exports.getAlerts = async (req, res, next) => {
   try {
     const alerts = await StockAlert.find();
     res.json(alerts);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
+  } catch (err) {
+    next(err);
   }
 };

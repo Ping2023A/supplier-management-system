@@ -1,20 +1,20 @@
 const Settings = require("../models/Settings");
 
 // GET system settings
-exports.getSettings = async (req, res) => {
+exports.getSettings = async (req, res, next) => {
   try {
     const settings = await Settings.findOne();
     if (!settings) {
       return res.json({ message: "No settings found, using defaults." });
     }
     res.json(settings);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
+  } catch (err) {
+    next(err); // forward to errorHandler
   }
 };
 
 // UPDATE system settings
-exports.updateSettings = async (req, res) => {
+exports.updateSettings = async (req, res, next) => {
   try {
     let settings = await Settings.findOne();
     if (!settings) {
@@ -24,7 +24,7 @@ exports.updateSettings = async (req, res) => {
     }
     const savedSettings = await settings.save();
     res.json(savedSettings);
-  } catch (error) {
-    res.status(400).json({ message: error.message });
+  } catch (err) {
+    next(err);
   }
 };

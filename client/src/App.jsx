@@ -19,22 +19,31 @@ function App() {
 
       {/* PROTECTED APP */}
       <Route
-        path="/*"
+        path="/dashboard"
         element={
-          <ProtectedRoute>
-            <DashboardLayout>
-              <Routes>
-                <Route path="/" element={<DashboardPage />} />
-                <Route path="/suppliers" element={<SuppliersPage />} />
-                <Route path="/orders" element={<OrdersPage />} />
-                <Route path="/deliveries" element={<DeliveriesPage />} />
-                <Route path="/reports" element={<ReportsPage />} />
-                <Route path="/settings" element={<SettingsPage />} />
-              </Routes>
-            </DashboardLayout>
+          <ProtectedRoute allowedRoles={["Admin", "Manager"]}>
+            <DashboardLayout />
           </ProtectedRoute>
         }
-      />
+      >
+        {/* ✅ index route renders DashboardPage when visiting /dashboard */}
+        <Route index element={<DashboardPage />} />
+
+        <Route path="suppliers" element={<SuppliersPage />} />
+        <Route path="orders" element={<OrdersPage />} />
+        <Route path="deliveries" element={<DeliveriesPage />} />
+        <Route path="reports" element={<ReportsPage />} />
+
+        {/* Admin-only route */}
+        <Route
+          path="settings"
+          element={
+            <ProtectedRoute allowedRoles={["Admin"]}>
+              <SettingsPage />
+            </ProtectedRoute>
+          }
+        />
+      </Route>
     </Routes>
   );
 }
