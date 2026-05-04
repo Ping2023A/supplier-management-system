@@ -5,7 +5,7 @@
   overflow: hidden;
 }
 
-/* TOP BAR */
+/* ================= TOP BAR ================= */
 .reports-top {
   height: 44px;
   display: flex;
@@ -24,15 +24,29 @@
   cursor: pointer;
 }
 
-.reports-actions {
-  display: flex;
-  gap: 120px;
-  margin-right: 95px;
-  font-size: 14px;
-  font-weight: 700;
+.generate-report-btn:hover {
+  background: #1f3a85;
 }
 
-/* CHARTS */
+.reports-actions {
+  display: flex;
+  gap: 20px;
+  margin-right: 95px;
+  align-items: center;
+}
+
+/* ================= INPUTS ================= */
+.search-input,
+.filter-select {
+  padding: 8px 12px;
+  border: none;
+  border-radius: 5px;
+  background: #2f2f2f;
+  color: white;
+  outline: none;
+}
+
+/* ================= CHARTS ================= */
 .reports-charts {
   margin-top: 18px;
   height: 180px;
@@ -44,7 +58,6 @@
 .chart-box {
   background: #20201f;
   padding: 14px;
-  overflow: hidden;
 }
 
 .chart-box h4 {
@@ -62,10 +75,9 @@
   justify-content: center;
   color: #bbb;
   font-size: 13px;
-  font-weight: 700;
 }
 
-/* TITLE */
+/* ================= TITLE ================= */
 .reports-title {
   margin: 14px 0 8px;
   font-size: 18px;
@@ -74,13 +86,12 @@
   padding-bottom: 6px;
 }
 
-/* TABLE WRAPPER */
+/* ================= TABLE ================= */
 .reports-table-wrapper {
-  height: calc(100vh - 100px - 18px - 44px - 18px - 180px - 40px);
+  height: calc(100vh - 260px);
   overflow: hidden;
 }
 
-/* TABLE */
 .reports-table {
   width: 100%;
   border-collapse: collapse;
@@ -89,7 +100,6 @@
   font-weight: 700;
 }
 
-/* HEADER */
 .reports-table thead tr {
   height: 48px;
   background: #1c1c1c;
@@ -100,7 +110,6 @@
   text-align: left;
 }
 
-/* ROWS */
 .reports-table tbody tr {
   height: 48px;
 }
@@ -117,13 +126,11 @@
   background: #444;
 }
 
-/* CELLS */
 .reports-table td {
   padding: 0 20px;
-  vertical-align: middle;
 }
 
-/* BUTTONS */
+/* ================= BUTTONS ================= */
 .report-btn {
   background: #2e2e2e;
   color: white;
@@ -139,39 +146,48 @@
   background: #444;
 }
 
-/* MATCH SUPPLIERS MODAL */
+/* ================= MODAL ================= */
 .modal-overlay {
   position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0,0,0,0.6);
+  inset: 0;
+  background: rgba(0, 0, 0, 0.65);
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 1000;
+  z-index: 9999;
 }
 
 .report-modal {
   width: 420px;
+  max-height: 80vh;
+  overflow-y: auto;
+
   background: #1f1f1f;
   color: white;
   padding: 25px;
   border-radius: 10px;
 }
 
-/* INPUTS */
-.search-input,
-.filter-select {
-  padding: 8px 12px;
-  border: none;
-  border-radius: 5px;
-  background: #2f2f2f;
-  color: white;
+/* MODAL TEXT */
+.report-modal h2 {
+  margin-bottom: 15px;
 }
 
-/* MODAL BUTTONS */
+.report-modal p {
+  margin: 8px 0;
+  font-size: 14px;
+}
+
+/* JSON BLOCK */
+.report-modal pre {
+  background: #2a2a2a;
+  padding: 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  overflow-x: auto;
+}
+
+/* BUTTONS */
 .modal-buttons {
   display: flex;
   justify-content: flex-end;
@@ -182,13 +198,23 @@
 .save-btn {
   background: #2f6fed;
   color: white;
-  padding: 8px 12px;
   border: none;
+  padding: 8px 12px;
+  cursor: pointer;
 }
 
 .close-btn {
   background: #555;
   color: white;
-  padding: 8px 12px;
   border: none;
+  padding: 8px 12px;
+  cursor: pointer;
+}
+
+.save-btn:hover {
+  background: #1e58c7;
+}
+
+.close-btn:hover {
+  background: #777;
 }

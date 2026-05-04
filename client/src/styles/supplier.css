@@ -24,12 +24,39 @@
   cursor: pointer;
 }
 
+.add-supplier-btn:hover {
+  background: #1f3a85;
+}
+
+/* ACTIONS */
 .supplier-actions {
   display: flex;
-  gap: 120px;
-  margin-right: 95px;
-  font-size: 14px;
-  font-weight: 700;
+  align-items: center;
+  gap: 16px;
+  margin-right: 40px;
+}
+
+/* SEARCH */
+.search-input {
+  width: 220px;
+  height: 34px;
+  padding: 0 12px;
+  border: none;
+  background: #2e2e2e;
+  color: white;
+  font-size: 12px;
+  outline: none;
+}
+
+/* FILTER */
+.filter-dropdown {
+  height: 34px;
+  padding: 0 10px;
+  background: #2e2e2e;
+  color: white;
+  border: none;
+  font-size: 12px;
+  cursor: pointer;
 }
 
 /* SUMMARY */
@@ -71,7 +98,7 @@
 /* TABLE WRAPPER */
 .supplier-table-wrapper {
   margin-top: 20px;
-  height: calc(100vh - 100px - 18px - 44px - 18px - 70px - 40px);
+  height: calc(100vh - 200px);
   overflow: hidden;
 }
 
@@ -134,148 +161,102 @@
   background: #444;
 }
 
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-
-  width: 100%;
-  height: 100%;
-
-  background: rgba(0, 0, 0, 0.6);
-
-  display: flex;
-  justify-content: center;
-  align-items: center;
-
-  z-index: 1000;
-}
-
-.modal {
-  width: 400px;
-
-  background: #2b2b2b;
-
-  padding: 25px;
-
-  border-radius: 10px;
-
-  display: flex;
-  flex-direction: column;
-
-  gap: 12px;
-}
-
-.modal h2 {
-  color: white;
-}
-
-.modal input,
-.modal select {
-  padding: 10px;
-
-  border: none;
-
-  border-radius: 5px;
-
-  outline: none;
-}
-
-.modal-buttons {
-  display: flex;
-
-  gap: 10px;
-}
-
-.modal-buttons button {
-  padding: 10px 15px;
-
-  border: none;
-
-  border-radius: 5px;
-
-  cursor: pointer;
-
-  font-weight: bold;
-}
-
-.search-input {
-  padding: 10px;
-  border: none;
-  border-radius: 5px;
-  outline: none;
-  width: 220px;
-}
-
-.filter-select {
-  padding: 10px;
-  border: none;
-  border-radius: 5px;
-  outline: none;
-  margin-left: 10px;
-}
-
-.supplier-actions {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
+/* DELETE BUTTON */
 .delete-btn {
-  background: crimson;
-  color: white;
+  background: #c0392b;
 }
+
+.delete-btn:hover {
+  background: #a93226;
+}
+
+/* ========================= */
+/* MODAL FIXED VERSION */
+/* ========================= */
 
 .modal-overlay {
   position: fixed;
-  top: 0;
-  left: 0;
-
-  width: 100%;
-  height: 100%;
-
-  background: rgba(0, 0, 0, 0.6);
+  inset: 0;
+  background: rgba(0, 0, 0, 0.65);
 
   display: flex;
   justify-content: center;
   align-items: center;
 
-  z-index: 1000;
+  z-index: 9999;
 }
 
+/* MODAL BOX */
 .modal {
   width: 400px;
-  background: #2b2b2b;
+  max-height: 80vh;
+  overflow-y: auto;
 
+  background: #2b2b2b;
   padding: 25px;
   border-radius: 10px;
 
   display: flex;
   flex-direction: column;
   gap: 12px;
+
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
 }
 
+/* TEXT */
 .modal h2 {
   color: white;
+  margin-bottom: 10px;
 }
 
+.modal p {
+  font-size: 13px;
+  color: #ccc;
+}
+
+/* INPUTS */
 .modal input,
 .modal select {
   padding: 10px;
   border: none;
   border-radius: 5px;
   outline: none;
+  background: #1f1f1f;
+  color: white;
 }
 
+/* BUTTON AREA */
 .modal-buttons {
   display: flex;
   gap: 10px;
+  margin-top: 10px;
 }
 
+/* BUTTONS */
 .modal-buttons button {
   padding: 10px 15px;
   border: none;
   border-radius: 5px;
   cursor: pointer;
   font-weight: bold;
+}
+
+/* PRIMARY */
+.modal-buttons button:first-child {
+  background: #2947a3;
+  color: white;
+}
+
+.modal-buttons button:first-child:hover {
+  background: #1f3a85;
+}
+
+/* CANCEL */
+.modal-buttons button:last-child {
+  background: #444;
+  color: white;
+}
+
+.modal-buttons button:last-child:hover {
+  background: #555;
 }

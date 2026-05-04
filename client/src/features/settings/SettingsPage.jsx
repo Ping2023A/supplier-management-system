@@ -9,49 +9,28 @@ const SettingsPage = () => {
     { name: "Kevin Wong", role: "Viewer", status: "Active" },
   ]);
 
-  const [auditLogs] = useState([
+  const auditLogs = [
     ["2024-04-15", "Admin User", "Modified User Permissions"],
     ["2024-04-14", "Jessica Lee", "Updated Supplier Record"],
     ["2024-04-13", "Kevin Wong", "Login Successful"],
     ["2024-04-12", "Tom Harris", "Added New Order"],
     ["2024-04-11", "Admin User", "Security Settings Changed"],
-  ]);
+  ];
 
-  const [alerts] = useState([
-    {
-      id: 1,
-      type: "Suspicious Payment",
-      supplier: "ABC Supplies",
-      amount: "$12,500",
-      status: "Pending Review",
-    },
-    {
-      id: 2,
-      type: "Multiple Failed Transactions",
-      supplier: "Global Traders",
-      amount: "$8,200",
-      status: "Investigating",
-    },
-  ]);
+  const alerts = [
+    { id: 1, type: "Suspicious Payment", supplier: "ABC Supplies", amount: "$12,500", status: "Pending Review" },
+    { id: 2, type: "Failed Transactions", supplier: "Global Traders", amount: "$8,200", status: "Investigating" },
+  ];
 
   const [page, setPage] = useState(1);
   const logsPerPage = 3;
 
-  const [modalOpen, setModalOpen] = useState(false);
+  const [modal, setModal] = useState(null);
   const [editIndex, setEditIndex] = useState(null);
-
-  const [alertModal, setAlertModal] = useState(false);
-  const [passwordModal, setPasswordModal] = useState(false);
-  const [twoFactorModal, setTwoFactorModal] = useState(false);
-  const [accessLogsModal, setAccessLogsModal] = useState(false);
 
   const [twoFactorEnabled, setTwoFactorEnabled] = useState(false);
 
-  const [form, setForm] = useState({
-    name: "",
-    role: "",
-    status: "Active",
-  });
+  const [form, setForm] = useState({ name: "", role: "", status: "Active" });
 
   const [passwordForm, setPasswordForm] = useState({
     currentPassword: "",
@@ -62,7 +41,7 @@ const SettingsPage = () => {
   const openAddModal = () => {
     setForm({ name: "", role: "", status: "Active" });
     setEditIndex(null);
-    setModalOpen(true);
+    setModal("user");
   };
 
   const saveUser = () => {
@@ -76,46 +55,34 @@ const SettingsPage = () => {
       setUsers([...users, form]);
     }
 
-    setModalOpen(false);
+    setModal(null);
   };
-
-  const logsStart = (page - 1) * logsPerPage;
-  const paginatedLogs = auditLogs.slice(logsStart, logsStart + logsPerPage);
-  const totalPages = Math.ceil(auditLogs.length / logsPerPage);
 
   const updatePassword = () => {
     if (
       !passwordForm.currentPassword ||
       !passwordForm.newPassword ||
-      !passwordForm.confirmPassword
+      passwordForm.newPassword !== passwordForm.confirmPassword
     ) {
-      alert("Please complete all fields.");
+      alert("Check password fields.");
       return;
     }
 
-    if (passwordForm.newPassword !== passwordForm.confirmPassword) {
-      alert("Passwords do not match.");
-      return;
-    }
-
-    alert("Password updated successfully!");
-    setPasswordModal(false);
-
-    setPasswordForm({
-      currentPassword: "",
-      newPassword: "",
-      confirmPassword: "",
-    });
+    alert("Password updated!");
+    setModal(null);
+    setPasswordForm({ currentPassword: "", newPassword: "", confirmPassword: "" });
   };
 
-  const toggleTwoFactor = () => {
-    setTwoFactorEnabled(!twoFactorEnabled);
-  };
+  const toggleTwoFactor = () => setTwoFactorEnabled(!twoFactorEnabled);
+
+  const logsStart = (page - 1) * logsPerPage;
+  const paginatedLogs = auditLogs.slice(logsStart, logsStart + logsPerPage);
+  const totalPages = Math.ceil(auditLogs.length / logsPerPage);
 
   return (
     <div className="settings-page">
 
-      {/* TOP BAR */}
+      {/* TOP */}
       <div className="settings-top">
         <button className="add-user-btn" onClick={openAddModal}>
           Add User
@@ -124,11 +91,9 @@ const SettingsPage = () => {
 
       <div className="settings-grid">
 
-        {/* USER MANAGEMENT */}
+        {/* USERS */}
         <div className="settings-card">
-          <div className="settings-card-title">
-            <span>User Management</span>
-          </div>
+          <div className="settings-card-title">User Management</div>
 
           <table className="settings-table">
             <thead>
@@ -140,18 +105,13 @@ const SettingsPage = () => {
             </thead>
 
             <tbody>
-              {users.map((user, index) => (
-                <tr key={index}>
-                  <td>{user.name}</td>
-                  <td>{user.role}</td>
-
+              {users.map((u, i) => (
+                <tr key={i}>
+                  <td>{u.name}</td>
+                  <td>{u.role}</td>
                   <td>
-                    <span
-                      className={`user-status ${
-                        user.status === "Active" ? "active" : "inactive"
-                      }`}
-                    >
-                      {user.status}
+                    <span className={`user-status ${u.status.toLowerCase()}`}>
+                      {u.status}
                     </span>
                   </td>
                 </tr>
@@ -160,294 +120,52 @@ const SettingsPage = () => {
           </table>
         </div>
 
-        {/* SECURITY SETTINGS */}
+        {/* SECURITY */}
         <div className="settings-card">
           <h3>Security Settings</h3>
 
           <div className="settings-row">
             <span>Change Password</span>
-
-            <button
-              className="mini-btn"
-              onClick={() => setPasswordModal(true)}
-            >
-              Update
-            </button>
+            <button className="mini-btn" onClick={() => setModal("password")}>Update</button>
           </div>
 
           <div className="settings-row">
             <span>Two-Factor Authentication</span>
-
-            <button
-              className="mini-btn"
-              onClick={() => setTwoFactorModal(true)}
-            >
-              Update
-            </button>
+            <button className="mini-btn" onClick={() => setModal("2fa")}>Update</button>
           </div>
 
           <div className="settings-row">
             <span>Access Logs</span>
-
-            <button
-              className="mini-btn"
-              onClick={() => setAccessLogsModal(true)}
-            >
-              View
-            </button>
+            <button className="mini-btn" onClick={() => setModal("logs")}>View</button>
           </div>
         </div>
 
-        {/* FRAUD DETECTION */}
-        <div className="settings-card fraud-card">
+        {/* FRAUD */}
+        <div className="settings-card">
           <h3>Fraud Detection</h3>
 
           <div className="fraud-row">
-            Suspicious Transactions:
-            <span className="warning-text">2 Alerts</span>
+            Suspicious Transactions: <span className="warning-text">2 Alerts</span>
           </div>
 
           <div className="fraud-row">
-            High-Value Payment Monitoring:
-            <span className="success-text">Enabled</span>
+            High Value Monitoring: <span className="success-text">Enabled</span>
           </div>
 
           <div className="fraud-row">
-            Fraud Alerts:
-            <span className="success-text">Active</span>
+            Fraud Alerts: <span className="success-text">Active</span>
           </div>
 
-          <button
-            className="view-alerts-btn"
-            onClick={() => setAlertModal(true)}
-          >
+          <button className="view-alerts-btn" onClick={() => setModal("alerts")}>
             View Alerts
           </button>
         </div>
 
-        {/* AUDIT LOGS */}
+        {/* ✅ FIXED AUDIT */}
         <div className="settings-card audit-card">
           <h3>Audit Logs</h3>
 
-          <table className="audit-table">
-            <thead>
-              <tr>
-                <th>Date</th>
-                <th>User</th>
-                <th>Action</th>
-              </tr>
-            </thead>
-
-            <tbody>
-              {paginatedLogs.map((log, index) => (
-                <tr key={index}>
-                  <td>{log[0]}</td>
-                  <td>{log[1]}</td>
-                  <td>{log[2]}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-
-          {/* PAGINATION */}
-          <div className="pagination">
-            {Array.from({ length: totalPages }, (_, i) => (
-              <button
-                key={i}
-                onClick={() => setPage(i + 1)}
-                style={{
-                  background: page === i + 1 ? "#444" : "#2e2e2e",
-                }}
-              >
-                {i + 1}
-              </button>
-            ))}
-
-            <button
-              onClick={() => setPage((p) => Math.min(p + 1, totalPages))}
-            >
-              Next
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* ADD USER MODAL */}
-      {modalOpen && (
-        <div className="modal-overlay">
-          <div className="report-modal">
-            <h3>Add User</h3>
-
-            <input
-              className="search-input"
-              placeholder="Name"
-              value={form.name}
-              onChange={(e) => setForm({ ...form, name: e.target.value })}
-            />
-
-            <input
-              className="search-input"
-              placeholder="Role"
-              value={form.role}
-              onChange={(e) => setForm({ ...form, role: e.target.value })}
-            />
-
-            <select
-              className="filter-select"
-              value={form.status}
-              onChange={(e) => setForm({ ...form, status: e.target.value })}
-            >
-              <option>Active</option>
-              <option>Inactive</option>
-            </select>
-
-            <div className="modal-buttons">
-              <button className="save-btn" onClick={saveUser}>
-                Save
-              </button>
-
-              <button
-                className="close-btn"
-                onClick={() => setModalOpen(false)}
-              >
-                Close
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* FRAUD ALERTS MODAL */}
-      {alertModal && (
-        <div className="modal-overlay">
-          <div className="report-modal">
-            <h3>Fraud Alerts</h3>
-
-            {alerts.map((alert) => (
-              <div
-                key={alert.id}
-                style={{
-                  background: "#2e2e2e",
-                  padding: "12px",
-                  marginBottom: "12px",
-                  borderRadius: "6px",
-                }}
-              >
-                <p><strong>Type:</strong> {alert.type}</p>
-                <p><strong>Supplier:</strong> {alert.supplier}</p>
-                <p><strong>Amount:</strong> {alert.amount}</p>
-                <p><strong>Status:</strong> {alert.status}</p>
-              </div>
-            ))}
-
-            <div className="modal-buttons">
-              <button
-                className="close-btn"
-                onClick={() => setAlertModal(false)}
-              >
-                Close
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* CHANGE PASSWORD MODAL */}
-      {passwordModal && (
-        <div className="modal-overlay">
-          <div className="report-modal">
-            <h3>Change Password</h3>
-
-            <input
-              type="password"
-              className="search-input"
-              placeholder="Current Password"
-              value={passwordForm.currentPassword}
-              onChange={(e) =>
-                setPasswordForm({
-                  ...passwordForm,
-                  currentPassword: e.target.value,
-                })
-              }
-            />
-
-            <input
-              type="password"
-              className="search-input"
-              placeholder="New Password"
-              value={passwordForm.newPassword}
-              onChange={(e) =>
-                setPasswordForm({
-                  ...passwordForm,
-                  newPassword: e.target.value,
-                })
-              }
-            />
-
-            <input
-              type="password"
-              className="search-input"
-              placeholder="Confirm Password"
-              value={passwordForm.confirmPassword}
-              onChange={(e) =>
-                setPasswordForm({
-                  ...passwordForm,
-                  confirmPassword: e.target.value,
-                })
-              }
-            />
-
-            <div className="modal-buttons">
-              <button className="save-btn" onClick={updatePassword}>
-                Update
-              </button>
-
-              <button
-                className="close-btn"
-                onClick={() => setPasswordModal(false)}
-              >
-                Close
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* TWO FACTOR MODAL */}
-      {twoFactorModal && (
-        <div className="modal-overlay">
-          <div className="report-modal">
-            <h3>Two-Factor Authentication</h3>
-
-            <p style={{ marginBottom: "20px" }}>
-              Current Status:
-              <strong>
-                {twoFactorEnabled ? " Enabled" : " Disabled"}
-              </strong>
-            </p>
-
-            <div className="modal-buttons">
-              <button className="save-btn" onClick={toggleTwoFactor}>
-                {twoFactorEnabled ? "Disable" : "Enable"}
-              </button>
-
-              <button
-                className="close-btn"
-                onClick={() => setTwoFactorModal(false)}
-              >
-                Close
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ACCESS LOGS MODAL */}
-      {accessLogsModal && (
-        <div className="modal-overlay">
-          <div className="report-modal">
-            <h3>Access Logs</h3>
-
+          <div className="audit-table-wrapper">
             <table className="audit-table">
               <thead>
                 <tr>
@@ -458,8 +176,8 @@ const SettingsPage = () => {
               </thead>
 
               <tbody>
-                {auditLogs.map((log, index) => (
-                  <tr key={index}>
+                {paginatedLogs.map((log, i) => (
+                  <tr key={i}>
                     <td>{log[0]}</td>
                     <td>{log[1]}</td>
                     <td>{log[2]}</td>
@@ -467,14 +185,140 @@ const SettingsPage = () => {
                 ))}
               </tbody>
             </table>
+          </div>
+
+          <div className="pagination">
+            {Array.from({ length: totalPages }, (_, i) => (
+              <button
+                key={i}
+                onClick={() => setPage(i + 1)}
+                className={page === i + 1 ? "active-page" : ""}
+              >
+                {i + 1}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* ===== MODALS (unchanged) ===== */}
+
+      {modal === "user" && (
+        <div className="modal-overlay">
+          <div className="report-modal">
+            <h3>Add User</h3>
+
+            <input className="search-input" placeholder="Name"
+              value={form.name}
+              onChange={(e) => setForm({ ...form, name: e.target.value })}
+            />
+
+            <input className="search-input" placeholder="Role"
+              value={form.role}
+              onChange={(e) => setForm({ ...form, role: e.target.value })}
+            />
+
+            <select className="filter-select"
+              value={form.status}
+              onChange={(e) => setForm({ ...form, status: e.target.value })}
+            >
+              <option>Active</option>
+              <option>Inactive</option>
+            </select>
 
             <div className="modal-buttons">
-              <button
-                className="close-btn"
-                onClick={() => setAccessLogsModal(false)}
-              >
-                Close
+              <button className="save-btn" onClick={saveUser}>Save</button>
+              <button className="close-btn" onClick={() => setModal(null)}>Close</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {modal === "password" && (
+        <div className="modal-overlay">
+          <div className="report-modal">
+            <h3>Change Password</h3>
+
+            <input type="password" className="search-input" placeholder="Current"
+              value={passwordForm.currentPassword}
+              onChange={(e) => setPasswordForm({ ...passwordForm, currentPassword: e.target.value })}
+            />
+
+            <input type="password" className="search-input" placeholder="New"
+              value={passwordForm.newPassword}
+              onChange={(e) => setPasswordForm({ ...passwordForm, newPassword: e.target.value })}
+            />
+
+            <input type="password" className="search-input" placeholder="Confirm"
+              value={passwordForm.confirmPassword}
+              onChange={(e) => setPasswordForm({ ...passwordForm, confirmPassword: e.target.value })}
+            />
+
+            <div className="modal-buttons">
+              <button className="save-btn" onClick={updatePassword}>Update</button>
+              <button className="close-btn" onClick={() => setModal(null)}>Close</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {modal === "2fa" && (
+        <div className="modal-overlay">
+          <div className="report-modal">
+            <h3>Two-Factor Authentication</h3>
+
+            <p>Status: <b>{twoFactorEnabled ? "Enabled" : "Disabled"}</b></p>
+
+            <div className="modal-buttons">
+              <button className="save-btn" onClick={toggleTwoFactor}>
+                {twoFactorEnabled ? "Disable" : "Enable"}
               </button>
+              <button className="close-btn" onClick={() => setModal(null)}>Close</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {modal === "alerts" && (
+        <div className="modal-overlay">
+          <div className="report-modal">
+            <h3>Fraud Alerts</h3>
+
+            {alerts.map(a => (
+              <div key={a.id} style={{ background: "#2e2e2e", padding: 10, marginBottom: 10 }}>
+                <p>{a.type}</p>
+                <p>{a.supplier}</p>
+                <p>{a.amount}</p>
+                <p>{a.status}</p>
+              </div>
+            ))}
+
+            <div className="modal-buttons">
+              <button className="close-btn" onClick={() => setModal(null)}>Close</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {modal === "logs" && (
+        <div className="modal-overlay">
+          <div className="report-modal">
+            <h3>Access Logs</h3>
+
+            <table className="audit-table">
+              <tbody>
+                {auditLogs.map((l, i) => (
+                  <tr key={i}>
+                    <td>{l[0]}</td>
+                    <td>{l[1]}</td>
+                    <td>{l[2]}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+
+            <div className="modal-buttons">
+              <button className="close-btn" onClick={() => setModal(null)}>Close</button>
             </div>
           </div>
         </div>

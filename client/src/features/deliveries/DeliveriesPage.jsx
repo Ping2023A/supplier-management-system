@@ -10,41 +10,66 @@ const DeliveriesPage = () => {
 
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("All");
+
+  // MODALS
   const [showModal, setShowModal] = useState(false);
-  const [viewData, setViewData] = useState(null);
-  const [deleteIndex, setDeleteIndex] = useState(null);
+  const [viewItem, setViewItem] = useState(null);
+  const [deleteItem, setDeleteItem] = useState(null);
 
   const [form, setForm] = useState({
     id: "",
     order: "",
     supplier: "",
     status: "In Transit",
-    date: ""
+    date: "",
   });
 
-  const filtered = deliveries.filter(d =>
-    (filter === "All" || d.status === filter) &&
-    (d.id.toLowerCase().includes(search.toLowerCase()) ||
-      d.supplier.toLowerCase().includes(search.toLowerCase()))
-  );
+  // INPUT
+  const handleChange = (e) => {
+    setForm({ ...form, [e.target.name]: e.target.value });
+  };
 
+  // ADD
   const addDelivery = () => {
-    if (!form.id || !form.order || !form.supplier || !form.date) {
-      alert("Please fill all fields");
-      return;
-    }
+    if (!form.id || !form.order || !form.supplier || !form.date) return;
 
     setDeliveries([...deliveries, form]);
+
+    setForm({
+      id: "",
+      order: "",
+      supplier: "",
+      status: "In Transit",
+      date: "",
+    });
+
     setShowModal(false);
-    setForm({ id: "", order: "", supplier: "", status: "In Transit", date: "" });
   };
+
+  // DELETE
+  const confirmDelete = () => {
+    setDeliveries(deliveries.filter((d) => d.id !== deleteItem.id));
+    setDeleteItem(null);
+  };
+
+  // FILTER
+  const filtered = deliveries.filter((d) => {
+    const matchFilter = filter === "All" || d.status === filter;
+
+    const matchSearch =
+      d.id.toLowerCase().includes(search.toLowerCase()) ||
+      d.supplier.toLowerCase().includes(search.toLowerCase()) ||
+      d.order.toLowerCase().includes(search.toLowerCase());
+
+    return matchFilter && matchSearch;
+  });
 
   return (
     <div className="deliveries-page">
 
       {/* TOP */}
       <div className="deliveries-top">
-        <button onClick={() => setShowModal(true)} className="add-delivery-btn">
+        <button className="add-delivery-btn" onClick={() => setShowModal(true)}>
           Add Delivery
         </button>
 
@@ -52,11 +77,13 @@ const DeliveriesPage = () => {
           <input
             className="search-input"
             placeholder="Search..."
+            value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
 
           <select
             className="filter-select"
+            value={filter}
             onChange={(e) => setFilter(e.target.value)}
           >
             <option value="All">All</option>
@@ -86,18 +113,18 @@ const DeliveriesPage = () => {
       <table className="deliveries-table">
         <thead>
           <tr>
-            <th>Shipment ID</th>
-            <th>Order ID</th>
+            <th>Shipment</th>
+            <th>Order</th>
             <th>Supplier</th>
             <th>Status</th>
-            <th>Expected Date</th>
+            <th>Date</th>
             <th>Action</th>
           </tr>
         </thead>
 
         <tbody>
-          {filtered.map((d, index) => (
-            <tr key={index}>
+          {filtered.map((d) => (
+            <tr key={d.id}>
               <td>{d.id}</td>
               <td>{d.order}</td>
               <td>{d.supplier}</td>
@@ -107,12 +134,13 @@ const DeliveriesPage = () => {
                 </span>
               </td>
               <td>{d.date}</td>
+
               <td>
-                <button className="delivery-table-btn" onClick={() => setViewData(d)}>
+                <button className="delivery-table-btn" onClick={() => setViewItem(d)}>
                   View
                 </button>
 
-                <button className="delivery-table-btn" onClick={() => setDeleteIndex(index)}>
+                <button className="delivery-table-btn" onClick={() => setDeleteItem(d)}>
                   Delete
                 </button>
               </td>
@@ -121,40 +149,23 @@ const DeliveriesPage = () => {
         </tbody>
       </table>
 
-      {/* ➕ ADD MODAL */}
+      {/* ================= ADD MODAL ================= */}
       {showModal && (
         <div className="modal-overlay">
           <div className="delivery-modal">
             <h2>Add Delivery</h2>
 
-            <input placeholder="Shipment ID"
-              value={form.id}
-              onChange={(e) => setForm({ ...form, id: e.target.value })}
-            />
+            <input name="id" placeholder="Shipment ID" value={form.id} onChange={handleChange} />
+            <input name="order" placeholder="Order ID" value={form.order} onChange={handleChange} />
+            <input name="supplier" placeholder="Supplier" value={form.supplier} onChange={handleChange} />
 
-            <input placeholder="Order ID"
-              value={form.order}
-              onChange={(e) => setForm({ ...form, order: e.target.value })}
-            />
-
-            <input placeholder="Supplier"
-              value={form.supplier}
-              onChange={(e) => setForm({ ...form, supplier: e.target.value })}
-            />
-
-            <select
-              value={form.status}
-              onChange={(e) => setForm({ ...form, status: e.target.value })}
-            >
+            <select name="status" value={form.status} onChange={handleChange}>
               <option>In Transit</option>
               <option>Delivered</option>
               <option>Delayed</option>
             </select>
 
-            <input type="date"
-              value={form.date}
-              onChange={(e) => setForm({ ...form, date: e.target.value })}
-            />
+            <input type="date" name="date" value={form.date} onChange={handleChange} />
 
             <div className="modal-buttons">
               <button className="save-btn" onClick={addDelivery}>Save</button>
@@ -164,20 +175,20 @@ const DeliveriesPage = () => {
         </div>
       )}
 
-      {/* 👁 VIEW MODAL (FIXED) */}
-      {viewData && (
+      {/* ================= VIEW MODAL ================= */}
+      {viewItem && (
         <div className="modal-overlay">
           <div className="delivery-modal">
             <h2>Delivery Details</h2>
 
-            <p><b>Shipment:</b> {viewData.id}</p>
-            <p><b>Order:</b> {viewData.order}</p>
-            <p><b>Supplier:</b> {viewData.supplier}</p>
-            <p><b>Status:</b> {viewData.status}</p>
-            <p><b>Date:</b> {viewData.date}</p>
+            <p><b>Shipment:</b> {viewItem.id}</p>
+            <p><b>Order:</b> {viewItem.order}</p>
+            <p><b>Supplier:</b> {viewItem.supplier}</p>
+            <p><b>Status:</b> {viewItem.status}</p>
+            <p><b>Date:</b> {viewItem.date}</p>
 
             <div className="modal-buttons">
-              <button className="close-btn" onClick={() => setViewData(null)}>
+              <button className="close-btn" onClick={() => setViewItem(null)}>
                 Close
               </button>
             </div>
@@ -185,29 +196,20 @@ const DeliveriesPage = () => {
         </div>
       )}
 
-      {/* ❌ DELETE MODAL */}
-      {deleteIndex !== null && (
+      {/* ================= DELETE MODAL ================= */}
+      {deleteItem && (
         <div className="modal-overlay">
           <div className="delivery-modal">
             <h2>Confirm Delete</h2>
 
-            <p>Are you sure you want to delete this delivery?</p>
+            <p>Are you sure you want to delete <b>{deleteItem.id}</b>?</p>
 
             <div className="modal-buttons">
-              <button
-                className="save-btn"
-                onClick={() => {
-                  setDeliveries(deliveries.filter((_, i) => i !== deleteIndex));
-                  setDeleteIndex(null);
-                }}
-              >
+              <button className="save-btn" onClick={confirmDelete}>
                 Yes, Delete
               </button>
 
-              <button
-                className="close-btn"
-                onClick={() => setDeleteIndex(null)}
-              >
+              <button className="close-btn" onClick={() => setDeleteItem(null)}>
                 Cancel
               </button>
             </div>

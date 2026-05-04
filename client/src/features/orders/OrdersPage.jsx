@@ -3,113 +3,79 @@ import "../../styles/orders.css";
 
 const OrdersPage = () => {
   const [orders, setOrders] = useState([
-    ["PO-1045", "ABC Electronics", "Laptop Batteries", "25", "Pending"],
-    ["PO-6776", "Global Textiles", "Uniform Fabric", "100", "Approved"],
-    ["PO-0102", "Nexa Solutions", "Network Cables", "60", "In Transit"],
-    ["PO-2201", "Prime Supplies", "Office Paper", "40", "Delivered"],
+    { id: "PO-1045", supplier: "ABC Electronics", item: "Laptop Batteries", qty: 25, status: "Pending" },
+    { id: "PO-6776", supplier: "Global Textiles", item: "Uniform Fabric", qty: 100, status: "Approved" },
+    { id: "PO-0102", supplier: "Nexa Solutions", item: "Network Cables", qty: 60, status: "In Transit" },
+    { id: "PO-2201", supplier: "Prime Supplies", item: "Office Paper", qty: 40, status: "Delivered" },
   ]);
 
-  const [showModal, setShowModal] = useState(false);
-  const [showViewModal, setShowViewModal] = useState(false);
+  const [showCreate, setShowCreate] = useState(false);
+  const [showView, setShowView] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState(null);
-  const [searchTerm, setsearchTerm] = useState("");
-  const [filterStatus, setFilterStatus] = useState("All");
-  const [newOrder, setNewOrder] = useState({
+
+  const [search, setSearch] = useState("");
+  const [filter, setFilter] = useState("All");
+
+  const [form, setForm] = useState({
     supplier: "",
     item: "",
-    quantity: "",
+    qty: "",
     status: "Pending",
   });
 
-  const handleInputChange = (e) => {
-    setNewOrder({
-      ...newOrder,
-      [e.target.name]: e.target.value,
-    });
+  const handleChange = (e) => {
+    setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const handleCreateOrder = () => {
-    if (
-      !newOrder.supplier ||
-      !newOrder.item ||
-      !newOrder.quantity
-    ) {
-      alert("Please fill in all fields.");
-      return;
-    }
+  const createOrder = () => {
+    if (!form.supplier || !form.item || !form.qty) return;
 
-    const randomId = `PO-${Math.floor(
-      1000 + Math.random() * 9000
-    )}`;
+    const newOrder = {
+      id: `PO-${Math.floor(1000 + Math.random() * 9000)}`,
+      supplier: form.supplier,
+      item: form.item,
+      qty: form.qty,
+      status: form.status,
+    };
 
-    const orderToAdd = [
-      randomId,
-      newOrder.supplier,
-      newOrder.item,
-      newOrder.quantity,
-      newOrder.status,
-    ];
+    setOrders([newOrder, ...orders]);
 
-    setOrders([orderToAdd, ...orders]);
-
-    setNewOrder({
-      supplier: "",
-      item: "",
-      quantity: "",
-      status: "Pending",
-    });
-
-    setShowModal(false);
+    setForm({ supplier: "", item: "", qty: "", status: "Pending" });
+    setShowCreate(false);
   };
 
-  const handleCancelOrder = (indexToRemove) => {
-    setOrders(
-      orders.filter((_, index) => index !== indexToRemove)
-    );
+  const deleteOrder = (id) => {
+    setOrders(orders.filter((o) => o.id !== id));
   };
 
-  const filteredOrders = orders.filter((order) => {
-    const matchesSearch = order.some((field) =>
-      field
-        .toString()
-        .toLowerCase()
-        .includes(searchTerm.toLowerCase())
+  const filtered = orders.filter((o) => {
+    const matchSearch = Object.values(o).some((v) =>
+      v.toString().toLowerCase().includes(search.toLowerCase())
     );
 
-    const matchesFilter =
-      filterStatus === "All" ||
-      order[4] === filterStatus;
+    const matchFilter = filter === "All" || o.status === filter;
 
-    return matchesSearch && matchesFilter;
+    return matchSearch && matchFilter;
   });
 
   return (
     <div className="orders-page">
+
+      {/* TOP */}
       <div className="orders-top">
-        <button
-          className="add-order-btn"
-          onClick={() => setShowModal(true)}
-        >
+        <button className="add-order-btn" onClick={() => setShowCreate(true)}>
           Create Order
         </button>
 
         <div className="orders-actions">
           <input
-            type="text"
-            placeholder="Search orders..."
             className="search-input"
-            value={searchTerm}
-            onChange={(e) =>
-              setSearchTerm(e.target.value)
-            }
+            placeholder="Search..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
           />
-          <select
-            className="filter-select"
-            value={filterStatus}
-            onChange={(e) =>
-              setFilterStatus(e.target.value)
-            }
-          >
+
+          <select className="filter-select" value={filter} onChange={(e) => setFilter(e.target.value)}>
             <option value="All">All</option>
             <option value="Pending">Pending</option>
             <option value="Approved">Approved</option>
@@ -119,58 +85,46 @@ const OrdersPage = () => {
         </div>
       </div>
 
+      {/* SUMMARY */}
       <div className="orders-summary">
-        <div className="order-box blue">
-          Total Orders: {orders.length}
-        </div>
-
+        <div className="order-box blue">Total: {orders.length}</div>
         <div className="order-box orange">
-          Pending Orders:{" "}
-          {
-            orders.filter(
-              (order) => order[4] === "Pending"
-            ).length
-          }
+          Pending: {orders.filter(o => o.status === "Pending").length}
         </div>
-
         <div className="order-box green">
-          Completed Orders:{" "}
-          {
-            orders.filter(
-              (order) => order[4] === "Delivered"
-            ).length
-          }
+          Delivered: {orders.filter(o => o.status === "Delivered").length}
         </div>
       </div>
 
+      {/* TABLE */}
       <div className="orders-table-wrapper">
         <table className="orders-table">
           <thead>
             <tr>
-              <th>Order ID</th>
+              <th>ID</th>
               <th>Supplier</th>
               <th>Item</th>
-              <th>Quantity</th>
+              <th>Qty</th>
               <th>Status</th>
               <th>Actions</th>
             </tr>
           </thead>
 
           <tbody>
-            {filteredOrders.map((order, index) => (
-              <tr key={index}>
-                <td>{order[0]}</td>
-                <td>{order[1]}</td>
-                <td>{order[2]}</td>
-                <td>{order[3]}</td>
-                <td>{order[4]}</td>
+            {filtered.map((o) => (
+              <tr key={o.id}>
+                <td>{o.id}</td>
+                <td>{o.supplier}</td>
+                <td>{o.item}</td>
+                <td>{o.qty}</td>
+                <td>{o.status}</td>
 
                 <td>
                   <button
                     className="order-table-btn"
                     onClick={() => {
-                      setSelectedOrder(order);
-                      setShowViewModal(true);
+                      setSelectedOrder(o);
+                      setShowView(true);
                     }}
                   >
                     View
@@ -178,77 +132,41 @@ const OrdersPage = () => {
 
                   <button
                     className="order-table-btn"
-                    onClick={() =>
-                      handleCancelOrder(index)
-                    }
+                    onClick={() => deleteOrder(o.id)}
                   >
                     Cancel
                   </button>
                 </td>
               </tr>
             ))}
-
-            {Array.from({
-              length: Math.max(0, 7 - orders.length),
-            }).map((_, index) => (
-              <tr key={`empty-${index}`}>
-                <td colSpan="6"></td>
-              </tr>
-            ))}
           </tbody>
         </table>
       </div>
 
-      {/* CREATE ORDER MODAL */}
-      {showModal && (
+      {/* CREATE MODAL */}
+      {showCreate && (
         <div className="modal-overlay">
           <div className="order-modal">
             <h2>Create Order</h2>
 
             <div className="modal-group">
               <label>Supplier</label>
-
-              <input
-                type="text"
-                name="supplier"
-                placeholder="Enter supplier name"
-                value={newOrder.supplier}
-                onChange={handleInputChange}
-              />
+              <input name="supplier" value={form.supplier} onChange={handleChange} />
             </div>
 
             <div className="modal-group">
               <label>Item</label>
-
-              <input
-                type="text"
-                name="item"
-                placeholder="Enter item name"
-                value={newOrder.item}
-                onChange={handleInputChange}
-              />
+              <input name="item" value={form.item} onChange={handleChange} />
             </div>
 
             <div className="modal-group">
-              <label>Quantity</label>
-
-              <input
-                type="number"
-                name="quantity"
-                placeholder="Enter quantity"
-                value={newOrder.quantity}
-                onChange={handleInputChange}
-              />
+              <label>Qty</label>
+              <input name="qty" value={form.qty} onChange={handleChange} />
             </div>
 
             <div className="modal-group">
               <label>Status</label>
-
-              <select
-                name="status"
-                value={newOrder.status}
-                onChange={handleInputChange}
-              >
+              <select name="status" value={form.status} onChange={handleChange}>
                 <option>Pending</option>
                 <option>Approved</option>
                 <option>In Transit</option>
@@ -257,80 +175,36 @@ const OrdersPage = () => {
             </div>
 
             <div className="modal-buttons">
-              <button
-                className="save-btn"
-                onClick={handleCreateOrder}
-              >
-                Save Order
-              </button>
-
-              <button
-                className="close-btn"
-                onClick={() => setShowModal(false)}
-              >
-                Cancel
-              </button>
+              <button className="save-btn" onClick={createOrder}>Save</button>
+              <button className="close-btn" onClick={() => setShowCreate(false)}>Cancel</button>
             </div>
           </div>
         </div>
       )}
 
-      {/* VIEW ORDER MODAL */}
-      {showViewModal && selectedOrder && (
+      {/* VIEW MODAL */}
+      {showView && selectedOrder && (
         <div className="modal-overlay">
           <div className="order-modal">
             <h2>Order Details</h2>
 
             <div className="view-order-details">
-              <p>
-                <strong>Order ID:</strong>{" "}
-                {selectedOrder[0]}
-              </p>
-
-              <p>
-                <strong>Supplier:</strong>{" "}
-                {selectedOrder[1]}
-              </p>
-
-              <p>
-                <strong>Item:</strong>{" "}
-                {selectedOrder[2]}
-              </p>
-
-              <p>
-                <strong>Quantity:</strong>{" "}
-                {selectedOrder[3]}
-              </p>
-
-              <p>
-                <strong>Status:</strong>{" "}
-                {selectedOrder[4]}
-              </p>
-
-              <p>
-                <strong>Order Date:</strong>{" "}
-                2026-05-01
-              </p>
-
-              <p>
-                <strong>Delivery Date:</strong>{" "}
-                Awaiting Delivery
-              </p>
+              <p><b>ID:</b> {selectedOrder.id}</p>
+              <p><b>Supplier:</b> {selectedOrder.supplier}</p>
+              <p><b>Item:</b> {selectedOrder.item}</p>
+              <p><b>Qty:</b> {selectedOrder.qty}</p>
+              <p><b>Status:</b> {selectedOrder.status}</p>
             </div>
 
             <div className="modal-buttons">
-              <button
-                className="close-btn"
-                onClick={() =>
-                  setShowViewModal(false)
-                }
-              >
+              <button className="close-btn" onClick={() => setShowView(false)}>
                 Close
               </button>
             </div>
           </div>
         </div>
       )}
+
     </div>
   );
 };

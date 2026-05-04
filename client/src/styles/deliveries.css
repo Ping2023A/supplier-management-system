@@ -5,7 +5,7 @@
   overflow: hidden;
 }
 
-/* TOP BAR */
+/* ================= TOP BAR ================= */
 .deliveries-top {
   height: 44px;
   display: flex;
@@ -24,13 +24,18 @@
   cursor: pointer;
 }
 
+.add-delivery-btn:hover {
+  background: #1f3a85;
+}
+
 .deliveries-actions {
   display: flex;
   gap: 20px;
   margin-right: 95px;
+  align-items: center;
 }
 
-/* INPUTS */
+/* ================= INPUTS ================= */
 .search-input,
 .filter-select {
   padding: 8px 12px;
@@ -41,7 +46,15 @@
   outline: none;
 }
 
-/* SUMMARY */
+.search-input::placeholder {
+  color: #bbb;
+}
+
+.filter-select {
+  cursor: pointer;
+}
+
+/* ================= SUMMARY ================= */
 .deliveries-summary {
   margin-top: 18px;
   height: 70px;
@@ -56,7 +69,6 @@
   font-weight: 800;
 }
 
-/* MATCH ORDER COLORS STYLE */
 .delivery-box.blue {
   background: #2f4380;
 }
@@ -69,23 +81,16 @@
   background: #c62828;
 }
 
-/* TABLE WRAPPER */
-.deliveries-table-wrapper {
-  margin-top: 20px;
-  height: calc(100vh - 100px - 18px - 44px - 18px - 70px - 40px);
-  overflow: hidden;
-}
-
-/* TABLE */
+/* ================= TABLE ================= */
 .deliveries-table {
   width: 100%;
   border-collapse: collapse;
   table-layout: fixed;
   font-size: 13px;
   font-weight: 700;
+  margin-top: 20px;
 }
 
-/* HEADER */
 .deliveries-table thead tr {
   height: 48px;
   background: #1c1c1c;
@@ -96,7 +101,6 @@
   text-align: left;
 }
 
-/* ROWS */
 .deliveries-table tbody tr {
   height: 48px;
 }
@@ -113,13 +117,12 @@
   background: #444;
 }
 
-/* CELLS */
 .deliveries-table td {
   padding: 0 20px;
   vertical-align: middle;
 }
 
-/* STATUS BADGES */
+/* ================= STATUS BADGES ================= */
 .status-badge {
   display: inline-block;
   min-width: 100px;
@@ -128,6 +131,7 @@
   font-size: 12px;
   font-weight: 800;
   color: white;
+  border-radius: 4px;
 }
 
 .status-badge.in-transit {
@@ -142,7 +146,7 @@
   background: #c62828;
 }
 
-/* BUTTONS */
+/* ================= TABLE BUTTONS ================= */
 .delivery-table-btn {
   background: #2e2e2e;
   color: white;
@@ -158,49 +162,43 @@
   background: #444;
 }
 
-/* MODAL (same as orders) */
+/* ================= MODAL OVERLAY ================= */
 .modal-overlay {
   position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.6);
+  inset: 0;
+  background: rgba(0, 0, 0, 0.65);
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 1000;
+  z-index: 9999;
 }
 
+/* ================= MODAL BOX ================= */
 .delivery-modal {
   width: 400px;
   background: #1f1f1f;
   color: white;
   padding: 25px;
   border-radius: 10px;
-  box-shadow: 0 0 20px rgba(0,0,0,0.5);
-}
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
 
-.modal-group {
   display: flex;
   flex-direction: column;
-  margin-bottom: 15px;
+  gap: 12px;
 }
 
-.modal-group label {
-  margin-bottom: 6px;
-  font-weight: bold;
-}
-
-.modal-group input,
-.modal-group select {
+/* ================= MODAL INPUT GROUP ================= */
+.delivery-modal input,
+.delivery-modal select {
   padding: 10px;
   border: none;
   border-radius: 5px;
   background: #2f2f2f;
   color: white;
+  outline: none;
 }
 
+/* ================= MODAL BUTTONS ================= */
 .modal-buttons {
   display: flex;
   justify-content: flex-end;
@@ -217,6 +215,10 @@
   cursor: pointer;
 }
 
+.save-btn:hover {
+  background: #1e58c7;
+}
+
 .close-btn {
   background: #555;
   color: white;
@@ -224,4 +226,14 @@
   padding: 10px 15px;
   border-radius: 5px;
   cursor: pointer;
+}
+
+.close-btn:hover {
+  background: #777;
+}
+
+/* ================= VIEW DETAILS ================= */
+.delivery-modal p {
+  margin: 10px 0;
+  font-size: 14px;
 }

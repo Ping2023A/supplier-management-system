@@ -4,9 +4,21 @@ import "../../styles/supplier.css";
 
 const SuppliersPage = () => {
   const [suppliers, setSuppliers] = useState([]);
-  const [showModal, setShowModal] = useState(false);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [filterStatus, setFilterStatus] = useState("All");
+
+  // MODALS
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showViewModal, setShowViewModal] = useState(false);
+
+  // SELECTED ITEMS
+  const [selectedIndex, setSelectedIndex] = useState(null);
+  const [selectedSupplier, setSelectedSupplier] = useState(null);
+
+  // SEARCH + FILTER
+  const [search, setSearch] = useState("");
+  const [filter, setFilter] = useState("");
+
+  // FORM STATE
   const [newSupplier, setNewSupplier] = useState({
     name: "",
     contact: "",
@@ -15,6 +27,15 @@ const SuppliersPage = () => {
     status: "Active",
   });
 
+  // FETCH DATA
+  useEffect(() => {
+    axios
+      .get("http://localhost:5000/api/suppliers")
+      .then((res) => setSuppliers(res.data))
+      .catch((err) => console.error(err));
+  }, []);
+
+  // HANDLE INPUT
   const handleChange = (e) => {
     setNewSupplier({
       ...newSupplier,
@@ -22,15 +43,9 @@ const SuppliersPage = () => {
     });
   };
 
+  // ADD SUPPLIER
   const handleAddSupplier = () => {
-    setSuppliers([
-      ...suppliers,
-      {
-        ...newSupplier,
-      },
-    ]);
-
-    setShowModal(false);
+    setSuppliers([...suppliers, newSupplier]);
 
     setNewSupplier({
       name: "",
@@ -39,86 +54,100 @@ const SuppliersPage = () => {
       performance: "",
       status: "Active",
     });
-  };
-  const handleDeleteSupplier = (indexToDelete) => {
-    const updatedSuppliers = suppliers.filter(
-      (_, index) => index !== indexToDelete
-    );
 
-    setSuppliers(updatedSuppliers);
+    setShowAddModal(false);
   };
 
-  const filteredSuppliers = suppliers.filter((supplier) => {
+  // VIEW MODAL
+  const handleView = (supplier) => {
+    setSelectedSupplier(supplier);
+    setShowViewModal(true);
+  };
+
+  // DELETE MODAL OPEN
+  const handleDeleteClick = (index) => {
+    setSelectedIndex(index);
+    setShowDeleteModal(true);
+  };
+
+  // CONFIRM DELETE
+  const confirmDelete = () => {
+    const updated = suppliers.filter((_, i) => i !== selectedIndex);
+    setSuppliers(updated);
+
+    setShowDeleteModal(false);
+    setSelectedIndex(null);
+  };
+
+  // FILTER LOGIC
+  const filteredSuppliers = suppliers.filter((s) => {
     const matchesSearch =
-      supplier.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      supplier.contact.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      supplier.location.toLowerCase().includes(searchTerm.toLowerCase());
+      s.name.toLowerCase().includes(search.toLowerCase()) ||
+      s.contact.toLowerCase().includes(search.toLowerCase()) ||
+      s.location.toLowerCase().includes(search.toLowerCase());
 
     const matchesFilter =
-      filterStatus === "All" || supplier.status === filterStatus;
+      filter === "" ||
+      (filter === "Active" && s.status === "Active") ||
+      (filter === "At Risk" && s.status === "At Risk");
 
     return matchesSearch && matchesFilter;
   });
-  useEffect(() => {
-    axios
-      .get("http://localhost:5000/api/suppliers")
-      .then((res) => {
-        setSuppliers(res.data);
-      })
-      .catch((err) => {
-        console.error(err);
-      });
-  }, []);
 
   return (
     <div className="suppliers-page">
+
+      {/* TOP BAR */}
       <div className="supplier-top">
-        <button className="add-supplier-btn" onClick={() => setShowModal(true)} >Add Supplier</button>
+        <button
+          className="add-supplier-btn"
+          onClick={() => setShowAddModal(true)}
+        >
+          Add Supplier
+        </button>
 
         <div className="supplier-actions">
-         <input
-            type="text"
-            placeholder="Search supplier..."
+          <input
             className="search-input"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            placeholder="Search suppliers..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
           />
 
           <select
-            className="filter-select"
-            value={filterStatus}
-            onChange={(e) => setFilterStatus(e.target.value)}
+            className="filter-dropdown"
+            value={filter}
+            onChange={(e) => setFilter(e.target.value)}
           >
-            <option value="All">All</option>
+            <option value="">Filter</option>
             <option value="Active">Active</option>
             <option value="At Risk">At Risk</option>
           </select>
         </div>
       </div>
 
+      {/* SUMMARY */}
       <div className="supplier-summary">
         <div className="supplier-box blue">
           Total Suppliers: {suppliers.length}
         </div>
 
         <div className="supplier-box green">
-          Active Suppliers:{" "}
-          {suppliers.filter((s) => s.status === "Active").length}
+          Active Suppliers: {suppliers.filter(s => s.status === "Active").length}
         </div>
 
         <div className="supplier-box red">
-          At-risk Suppliers:{" "}
-          {suppliers.filter((s) => s.status === "At Risk").length}
-          <span className="alert-icon">△</span>
+          At-risk Suppliers: {suppliers.filter(s => s.status === "At Risk").length}
         </div>
       </div>
 
+      {/* TABLE */}
       <div className="supplier-table-wrapper">
         <table className="supplier-table">
           <thead>
             <tr>
               <th>Supplier Name</th>
-              <th>Contact Person</th>
+              <th>Contact</th>
               <th>Location</th>
               <th>Performance</th>
               <th>Status</th>
@@ -127,7 +156,7 @@ const SuppliersPage = () => {
           </thead>
 
           <tbody>
-            {suppliers.map((supplier, index) => (
+            {filteredSuppliers.map((supplier, index) => (
               <tr key={index}>
                 <td>{supplier.name}</td>
                 <td>{supplier.contact}</td>
@@ -135,83 +164,88 @@ const SuppliersPage = () => {
                 <td>{supplier.performance}</td>
                 <td>{supplier.status}</td>
                 <td>
-                  <button className="table-btn">View</button>
-                  <button className="table-btn">Delete</button>
+                  <button
+                    className="table-btn"
+                    onClick={() => handleView(supplier)}
+                  >
+                    View
+                  </button>
+
+                  <button
+                    className="table-btn delete-btn"
+                    onClick={() => handleDeleteClick(index)}
+                  >
+                    Delete
+                  </button>
                 </td>
               </tr>
             ))}
-
-            {/* filler rows to keep layout */}
-            {Array.from({ length: Math.max(0, 10 - suppliers.length) }).map(
-              (_, index) => (
-                <tr key={`empty-${index}`}>
-                  <td colSpan="6"></td>
-                </tr>
-              )
-            )}
           </tbody>
         </table>
       </div>
 
-      {/* MODAL */}
-      {showModal && (
+      {/* ================= ADD MODAL ================= */}
+      {showAddModal && (
         <div className="modal-overlay">
           <div className="modal">
             <h2>Add Supplier</h2>
 
-            <input
-              type="text"
-              name="name"
-              placeholder="Supplier Name"
-              value={newSupplier.name}
-              onChange={handleChange}
-            />
+            <input name="name" placeholder="Name" value={newSupplier.name} onChange={handleChange} />
+            <input name="contact" placeholder="Contact" value={newSupplier.contact} onChange={handleChange} />
+            <input name="location" placeholder="Location" value={newSupplier.location} onChange={handleChange} />
+            <input name="performance" placeholder="Performance" value={newSupplier.performance} onChange={handleChange} />
 
-            <input
-              type="text"
-              name="contact"
-              placeholder="Contact Person"
-              value={newSupplier.contact}
-              onChange={handleChange}
-            />
-
-            <input
-              type="text"
-              name="location"
-              placeholder="Location"
-              value={newSupplier.location}
-              onChange={handleChange}
-            />
-
-            <input
-              type="text"
-              name="performance"
-              placeholder="Performance"
-              value={newSupplier.performance}
-              onChange={handleChange}
-            />
-
-            <select
-              name="status"
-              value={newSupplier.status}
-              onChange={handleChange}
-            >
+            <select name="status" value={newSupplier.status} onChange={handleChange}>
               <option value="Active">Active</option>
               <option value="At Risk">At Risk</option>
             </select>
 
             <div className="modal-buttons">
-              <button onClick={handleAddSupplier}>
-                Save
-              </button>
+              <button onClick={handleAddSupplier}>Save</button>
+              <button onClick={() => setShowAddModal(false)}>Cancel</button>
+            </div>
+          </div>
+        </div>
+      )}
 
-              <button onClick={() => setShowModal(false)}>
+      {/* ================= VIEW MODAL ================= */}
+      {showViewModal && selectedSupplier && (
+        <div className="modal-overlay">
+          <div className="modal">
+            <h2>Supplier Details</h2>
+
+            <p><b>Name:</b> {selectedSupplier.name}</p>
+            <p><b>Contact:</b> {selectedSupplier.contact}</p>
+            <p><b>Location:</b> {selectedSupplier.location}</p>
+            <p><b>Performance:</b> {selectedSupplier.performance}</p>
+            <p><b>Status:</b> {selectedSupplier.status}</p>
+
+            <div className="modal-buttons">
+              <button onClick={() => setShowViewModal(false)}>Close</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ================= DELETE MODAL ================= */}
+      {showDeleteModal && (
+        <div className="modal-overlay">
+          <div className="modal">
+            <h2>Confirm Delete</h2>
+            <p>Are you sure you want to delete this supplier?</p>
+
+            <div className="modal-buttons">
+              <button className="delete-btn" onClick={confirmDelete}>
+                Yes, Delete
+              </button>
+              <button onClick={() => setShowDeleteModal(false)}>
                 Cancel
               </button>
             </div>
           </div>
         </div>
       )}
+
     </div>
   );
 };
