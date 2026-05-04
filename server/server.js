@@ -1,33 +1,19 @@
-const express = require("express");
-const cors = require("cors");
+const mongoose = require("mongoose");
+const dotenv = require("dotenv");
+const app = require("./src/app");
 
-const app = express();
+dotenv.config();
 
-app.use(cors());
-app.use(express.json());
+const PORT = process.env.PORT || 5000;
+const MONGO_URI = process.env.MONGO_URI;
 
-// ✅ TEST ROUTE
-app.get("/api/suppliers", (req, res) => {
-  res.json([
-    {
-      name: "ABC Electronics",
-      contact: "John Carter",
-      location: "New York, USA",
-      performance: "92%",
-      status: "Active",
-    },
-    {
-      name: "Global Textiles",
-      contact: "Sarah Lee",
-      location: "Los Angeles, USA",
-      performance: "87%",
-      status: "Active",
-    },
-  ]);
-});
-
-const PORT = 5000;
-
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
+mongoose.connect(MONGO_URI)
+  .then(() => {
+    console.log("✅ MongoDB Connected");
+    app.listen(PORT, () => {
+      console.log(`✅ Server running on port ${PORT}`);
+    });
+  })
+  .catch((err) => {
+    console.error("❌ MongoDB connection error:", err.message);
+  });
