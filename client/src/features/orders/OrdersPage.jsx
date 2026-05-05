@@ -1,16 +1,12 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import axios from "axios";
 import "../../styles/orders.css";
 
 const OrdersPage = () => {
-  const [orders, setOrders] = useState([
-    { id: "PO-1045", supplier: "ABC Electronics", item: "Laptop Batteries", qty: 25, status: "Pending" },
-    { id: "PO-6776", supplier: "Global Textiles", item: "Uniform Fabric", qty: 100, status: "Approved" },
-    { id: "PO-0102", supplier: "Nexa Solutions", item: "Network Cables", qty: 60, status: "In Transit" },
-    { id: "PO-2201", supplier: "Prime Supplies", item: "Office Paper", qty: 40, status: "Delivered" },
-  ]);
-
+  const [orders, setOrders] = useState([]);
   const [showCreate, setShowCreate] = useState(false);
   const [showView, setShowView] = useState(false);
+  const [showEdit, setShowEdit] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState(null);
 
   const [search, setSearch] = useState("");
@@ -21,46 +17,94 @@ const OrdersPage = () => {
     item: "",
     qty: "",
     status: "Pending",
+    category: "Electronics",
+    deliveryDate: "", // delivery date field
   });
+
+  // Category → prefix mapping
+  const categoryPrefixes = {
+    "Clothing and Apparel": "CA",
+    "Home and Living": "HL",
+    "Electronics": "E",
+  };
+
+  // Load orders from backend
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    axios
+      .get("http://localhost:5000/api/orders", {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      .then((res) => setOrders(res.data))
+      .catch((err) => console.error("Error fetching orders:", err));
+  }, []);
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const createOrder = () => {
-    if (!form.supplier || !form.item || !form.qty) return;
+  const createOrder = async () => {
+    if (!form.supplier || !form.item || !form.qty || !form.deliveryDate) return;
 
+    const prefix = categoryPrefixes[form.category] || "GEN";
     const newOrder = {
-      id: `PO-${Math.floor(1000 + Math.random() * 9000)}`,
+      id: `${prefix}-${Math.floor(1000 + Math.random() * 9000)}`,
       supplier: form.supplier,
       item: form.item,
       qty: form.qty,
       status: form.status,
+      category: form.category,
+      deliveryDate: form.deliveryDate,
     };
 
-    setOrders([newOrder, ...orders]);
-
-    setForm({ supplier: "", item: "", qty: "", status: "Pending" });
-    setShowCreate(false);
+    try {
+      const token = localStorage.getItem("token");
+      const res = await axios.post("http://localhost:5000/api/orders", newOrder, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setOrders([res.data, ...orders]);
+      setForm({ supplier: "", item: "", qty: "", status: "Pending", category: "Electronics", deliveryDate: "" });
+      setShowCreate(false);
+    } catch (err) {
+      console.error("Error creating order:", err);
+    }
   };
 
-  const deleteOrder = (id) => {
-    setOrders(orders.filter((o) => o.id !== id));
+  const updateOrder = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const res = await axios.put(`http://localhost:5000/api/orders/${selectedOrder.id}`, selectedOrder, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setOrders(orders.map(o => o.id === selectedOrder.id ? res.data : o));
+      setShowEdit(false);
+    } catch (err) {
+      console.error("Error updating order:", err);
+    }
+  };
+
+  const deleteOrder = async (id) => {
+    try {
+      const token = localStorage.getItem("token");
+      await axios.delete(`http://localhost:5000/api/orders/${id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setOrders(orders.filter((o) => o.id !== id));
+    } catch (err) {
+      console.error("Error deleting order:", err);
+    }
   };
 
   const filtered = orders.filter((o) => {
     const matchSearch = Object.values(o).some((v) =>
       v.toString().toLowerCase().includes(search.toLowerCase())
     );
-
     const matchFilter = filter === "All" || o.status === filter;
-
     return matchSearch && matchFilter;
   });
 
   return (
     <div className="orders-page">
-
       {/* TOP */}
       <div className="orders-top">
         <button className="add-order-btn" onClick={() => setShowCreate(true)}>
@@ -74,13 +118,12 @@ const OrdersPage = () => {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
-
           <select className="filter-select" value={filter} onChange={(e) => setFilter(e.target.value)}>
             <option value="All">All</option>
             <option value="Pending">Pending</option>
-            <option value="Approved">Approved</option>
-            <option value="In Transit">In Transit</option>
             <option value="Delivered">Delivered</option>
+            <option value="Delayed">Delayed</option>
+            <option value="In Transit">In Transit</option>
           </select>
         </div>
       </div>
@@ -94,6 +137,12 @@ const OrdersPage = () => {
         <div className="order-box green">
           Delivered: {orders.filter(o => o.status === "Delivered").length}
         </div>
+        <div className="order-box red">
+          Delayed: {orders.filter(o => o.status === "Delayed").length}
+        </div>
+        <div className="order-box gray">
+          In Transit: {orders.filter(o => o.status === "In Transit").length}
+        </div>
       </div>
 
       {/* TABLE */}
@@ -106,10 +155,10 @@ const OrdersPage = () => {
               <th>Item</th>
               <th>Qty</th>
               <th>Status</th>
+              <th>Category</th>
               <th>Actions</th>
             </tr>
           </thead>
-
           <tbody>
             {filtered.map((o) => (
               <tr key={o.id}>
@@ -118,7 +167,7 @@ const OrdersPage = () => {
                 <td>{o.item}</td>
                 <td>{o.qty}</td>
                 <td>{o.status}</td>
-
+                <td>{o.category}</td>
                 <td>
                   <button
                     className="order-table-btn"
@@ -129,11 +178,16 @@ const OrdersPage = () => {
                   >
                     View
                   </button>
-
                   <button
                     className="order-table-btn"
-                    onClick={() => deleteOrder(o.id)}
+                    onClick={() => {
+                      setSelectedOrder(o);
+                      setShowEdit(true);
+                    }}
                   >
+                    Edit
+                  </button>
+                  <button className="order-table-btn" onClick={() => deleteOrder(o.id)}>
                     Cancel
                   </button>
                 </td>
@@ -148,32 +202,39 @@ const OrdersPage = () => {
         <div className="modal-overlay">
           <div className="order-modal">
             <h2>Create Order</h2>
-
             <div className="modal-group">
               <label>Supplier</label>
               <input name="supplier" value={form.supplier} onChange={handleChange} />
             </div>
-
             <div className="modal-group">
               <label>Item</label>
               <input name="item" value={form.item} onChange={handleChange} />
             </div>
-
             <div className="modal-group">
               <label>Qty</label>
               <input name="qty" value={form.qty} onChange={handleChange} />
             </div>
-
             <div className="modal-group">
               <label>Status</label>
               <select name="status" value={form.status} onChange={handleChange}>
                 <option>Pending</option>
-                <option>Approved</option>
-                <option>In Transit</option>
                 <option>Delivered</option>
+                <option>Delayed</option>
+                <option>In Transit</option>
               </select>
             </div>
-
+            <div className="modal-group">
+              <label>Category</label>
+              <select name="category" value={form.category} onChange={handleChange}>
+                <option>Clothing and Apparel</option>
+                <option>Home and Living</option>
+                <option>Electronics</option>
+              </select>
+            </div>
+            <div className="modal-group">
+              <label>Delivery Date</label>
+              <input type="date" name="deliveryDate" value={form.deliveryDate} onChange={handleChange} />
+            </div>
             <div className="modal-buttons">
               <button className="save-btn" onClick={createOrder}>Save</button>
               <button className="close-btn" onClick={() => setShowCreate(false)}>Cancel</button>
@@ -187,24 +248,104 @@ const OrdersPage = () => {
         <div className="modal-overlay">
           <div className="order-modal">
             <h2>Order Details</h2>
-
             <div className="view-order-details">
               <p><b>ID:</b> {selectedOrder.id}</p>
               <p><b>Supplier:</b> {selectedOrder.supplier}</p>
               <p><b>Item:</b> {selectedOrder.item}</p>
               <p><b>Qty:</b> {selectedOrder.qty}</p>
               <p><b>Status:</b> {selectedOrder.status}</p>
+              <p><b>Category:</b> {selectedOrder.category}</p>
+              <p><b>Delivery Date:</b> {selectedOrder.deliveryDate}</p>
             </div>
-
             <div className="modal-buttons">
-              <button className="close-btn" onClick={() => setShowView(false)}>
-                Close
-              </button>
+              <button className="close-btn" onClick={() => setShowView(false)}>Close</button>
             </div>
           </div>
         </div>
       )}
 
+      {/* EDIT MODAL */}
+      {showEdit && selectedOrder && (
+        <div className="modal-overlay">
+          <div className="order-modal">
+            <h2>Edit Order</h2>
+            <div className="modal-group">
+              <label>Supplier</label>
+              <input
+                name="supplier"
+                value={selectedOrder.supplier}
+                onChange={(e) =>
+                  setSelectedOrder({ ...selectedOrder, supplier: e.target.value })
+                }
+              />
+            </div>
+            <div className="modal-group">
+              <label>Item</label>
+              <input
+                name="item"
+                value={selectedOrder.item}
+                onChange={(e) =>
+                  setSelectedOrder({ ...selectedOrder, item: e.target.value })
+                }
+              />
+            </div>
+            <div className="modal-group">
+              <label>Qty</label>
+              <input
+                name="qty"
+                value={selectedOrder.qty}
+                onChange={(e) =>
+                  setSelectedOrder({ ...selectedOrder, qty: e.target.value })
+                }
+              />
+            </div>
+            <div className="modal-group">
+              <label>Status</label>
+              <select
+                name="status"
+                value={selectedOrder.status}
+                onChange={(e) =>
+                  setSelectedOrder({ ...selectedOrder, status: e.target.value })
+                }
+              >
+                <option>Pending</option>
+                <option>Delivered</option>
+                <option>Delayed</option>
+                <option>In Transit</option>
+              </select>
+            </div>
+            <div className="modal-group">
+              <label>Category</label>
+              <select
+                name="category"
+                value={selectedOrder.category}
+                onChange={(e) =>
+                  setSelectedOrder({ ...selectedOrder, category: e.target.value })
+                }
+              >
+                <option>Clothing and Apparel</option>
+                <option>Home and Living</option>
+                <option>Electronics</option>
+              </select>
+            </div>
+            <div className="modal-group">
+              <label>Delivery Date</label>
+              <input
+                type="date"
+                name="deliveryDate"
+                value={selectedOrder.deliveryDate}
+                onChange={(e) =>
+                  setSelectedOrder({ ...selectedOrder, deliveryDate: e.target.value })
+                }
+              />
+            </div>
+            <div className="modal-buttons">
+              <button className="save-btn" onClick={updateOrder}>Save</button>
+              <button className="close-btn" onClick={() => setShowEdit(false)}>Cancel</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

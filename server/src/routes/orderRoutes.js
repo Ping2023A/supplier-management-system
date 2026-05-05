@@ -1,17 +1,13 @@
 const express = require("express");
 const router = express.Router();
-const {
-  getOrders,
-  getOrderById,
-  createOrder,
-  updateOrder,
-  deleteOrder,
-} = require("../controllers/orderController");
+const ordersController = require("../controllers/orderController");
+const authMiddleware = require("../middlewares/authMiddleware");
 
-router.get("/", getOrders);
-router.get("/:id", getOrderById);
-router.post("/", createOrder);
-router.put("/:id", updateOrder);
-router.delete("/:id", deleteOrder);
+// CRUD routes
+router.get("/", authMiddleware, ordersController.getOrders);
+router.get("/:id", authMiddleware, ordersController.getOrderById);
+router.post("/", authMiddleware, ordersController.createOrder);
+router.put("/:id", authMiddleware, ordersController.updateOrder);
+router.delete("/:id", authMiddleware, ordersController.deleteOrder);
 
 module.exports = router;

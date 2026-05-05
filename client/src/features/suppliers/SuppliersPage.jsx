@@ -29,10 +29,13 @@ const SuppliersPage = () => {
 
   // FETCH DATA
   useEffect(() => {
+    const token = localStorage.getItem("token");
     axios
-      .get("http://localhost:5000/api/suppliers")
+      .get("http://localhost:5000/api/suppliers", {
+        headers: { Authorization: `Bearer ${token}` },
+      })
       .then((res) => setSuppliers(res.data))
-      .catch((err) => console.error(err));
+      .catch((err) => console.error("Fetch suppliers error:", err));
   }, []);
 
   // HANDLE INPUT
@@ -43,19 +46,27 @@ const SuppliersPage = () => {
     });
   };
 
-  // ADD SUPPLIER
-  const handleAddSupplier = () => {
-    setSuppliers([...suppliers, newSupplier]);
+  // ADD SUPPLIER (POST to backend)
+  const handleAddSupplier = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const res = await axios.post("http://localhost:5000/api/suppliers", newSupplier, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
 
-    setNewSupplier({
-      name: "",
-      contact: "",
-      location: "",
-      performance: "",
-      status: "Active",
-    });
+      setSuppliers([...suppliers, res.data]); // backend returns saved supplier
+      setShowAddModal(false);
 
-    setShowAddModal(false);
+      setNewSupplier({
+        name: "",
+        contact: "",
+        location: "",
+        performance: "",
+        status: "Active",
+      });
+    } catch (err) {
+      console.error("Add supplier error:", err);
+    }
   };
 
   // VIEW MODAL
@@ -70,13 +81,24 @@ const SuppliersPage = () => {
     setShowDeleteModal(true);
   };
 
-  // CONFIRM DELETE
-  const confirmDelete = () => {
-    const updated = suppliers.filter((_, i) => i !== selectedIndex);
-    setSuppliers(updated);
+  // CONFIRM DELETE (DELETE from backend)
+  const confirmDelete = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const supplierToDelete = suppliers[selectedIndex];
 
-    setShowDeleteModal(false);
-    setSelectedIndex(null);
+      await axios.delete(`http://localhost:5000/api/suppliers/${supplierToDelete._id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      const updated = suppliers.filter((_, i) => i !== selectedIndex);
+      setSuppliers(updated);
+
+      setShowDeleteModal(false);
+      setSelectedIndex(null);
+    } catch (err) {
+      console.error("Delete supplier error:", err);
+    }
   };
 
   // FILTER LOGIC
@@ -157,7 +179,7 @@ const SuppliersPage = () => {
 
           <tbody>
             {filteredSuppliers.map((supplier, index) => (
-              <tr key={index}>
+              <tr key={supplier._id || index}>
                 <td>{supplier.name}</td>
                 <td>{supplier.contact}</td>
                 <td>{supplier.location}</td>

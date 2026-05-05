@@ -3,17 +3,17 @@ const Order = require("../models/Order");
 // GET all orders
 exports.getOrders = async (req, res, next) => {
   try {
-    const orders = await Order.find().populate("supplier", "name contact");
+    const orders = await Order.find(); // remove populate if supplier is just a string
     res.json(orders);
   } catch (err) {
-    next(err); // forward to errorHandler
+    next(err);
   }
 };
 
 // GET single order
 exports.getOrderById = async (req, res, next) => {
   try {
-    const order = await Order.findById(req.params.id).populate("supplier", "name contact");
+    const order = await Order.findById(req.params.id);
     if (!order) return res.status(404).json({ message: "Order not found" });
     res.json(order);
   } catch (err) {
@@ -28,6 +28,7 @@ exports.createOrder = async (req, res, next) => {
     const savedOrder = await order.save();
     res.status(201).json(savedOrder);
   } catch (err) {
+    console.error("Error creating order:", err);
     next(err);
   }
 };
