@@ -1,36 +1,18 @@
-const User = require("../models/User");
-const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 
-// Register new user
-exports.register = async (req, res, next) => {
-  try {
-    const user = new User(req.body);
-    await user.save();
-    res.status(201).json({ message: "User registered successfully" });
-  } catch (err) {
-    next(err); // Pass error to errorHandler
+function auth(req, res, next) {
+  const token = req.header("Authorization")?.replace("Bearer ", "");
+  if (!token) {
+    return res.status(401).json({ error: "No token, authorization denied" });
   }
-};
 
-// Login user
-exports.login = async (req, res, next) => {
   try {
-    const { email, password } = req.body;
-    const user = await User.findOne({ email });
-    if (!user) return res.status(401).json({ error: "Invalid credentials" });
-
-    const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) return res.status(401).json({ error: "Invalid credentials" });
-
-    const token = jwt.sign(
-      { id: user._id, role: user.role }, // include role if schema has it
-      process.env.JWT_SECRET,
-      { expiresIn: "1h" }
-    );
-
-    res.json({ token });
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    req.user = decoded; // attach user payload to request
+    next();
   } catch (err) {
-    next(err); // Pass error to errorHandler
+    return res.status(401).json({ error: "Token is not valid" });
   }
-};
+}
+
+module.exports = auth;   // ✅ must export the function

@@ -23,13 +23,19 @@ app.use(express.json());
 // Public routes
 app.use("/api/auth", authRoutes);
 
-// Protected routes
-//app.use("/api/suppliers", auth, supplierRoutes);
-//app.use("/api/orders", auth, orderRoutes);
-//app.use("/api/deliveries", auth, deliveryRoutes);
-//app.use("/api/dashboard", auth, dashboardRoutes);
-//app.use("/api/reports", auth, reportRoutes);
-//app.use("/api/settings", auth, settingsRoutes);
+
+// Protected routes (enable auth middleware if needed)
+app.use("/api/suppliers", auth, supplierRoutes);
+app.use("/api/orders", auth, orderRoutes);
+app.use("/api/deliveries", auth, deliveryRoutes);
+app.use("/api/dashboard", auth, dashboardRoutes);
+app.use("/api/reports", auth, reportRoutes);
+app.use("/api/settings", auth, settingsRoutes);
+
+// Health check route
+app.get("/", (req, res) => {
+  res.send("✅ API is running...");
+});
 
 // Error handling middleware (must be last)
 app.use(errorHandler);

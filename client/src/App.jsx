@@ -1,4 +1,4 @@
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 import DashboardLayout from "./components/layout/DashboardLayout";
 import ProtectedRoute from "./components/ProtectedRoute";
 
@@ -14,6 +14,9 @@ import SettingsPage from "./features/settings/SettingsPage";
 function App() {
   return (
     <Routes>
+      {/* Root route: redirect "/" to "/login" */}
+      <Route path="/" element={<Navigate to="/login" replace />} />
+
       {/* LOGIN */}
       <Route path="/login" element={<LoginPage />} />
 
@@ -26,7 +29,7 @@ function App() {
           </ProtectedRoute>
         }
       >
-        {/* ✅ index route renders DashboardPage when visiting /dashboard */}
+        {/* Index route renders DashboardPage when visiting /dashboard */}
         <Route index element={<DashboardPage />} />
 
         <Route path="suppliers" element={<SuppliersPage />} />
@@ -44,6 +47,9 @@ function App() {
           }
         />
       </Route>
+
+      {/* Catch-all route for unknown paths */}
+      <Route path="*" element={<Navigate to="/login" replace />} />
     </Routes>
   );
 }

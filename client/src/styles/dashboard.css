@@ -61,6 +61,7 @@ body {
   font-size: 21px;
   font-weight: 800;
   border-bottom: 1px solid #5e5e5e;
+  cursor: pointer;
 }
 
 .sidebar li.active {
@@ -77,6 +78,7 @@ body {
   text-align: center;
   font-size: 21px;
   font-weight: 800;
+  cursor: pointer;
 }
 
 .main {
@@ -105,7 +107,7 @@ body {
 .content {
   height: calc(100vh - 90px);
   padding: 18px;
-  overflow: hidden;
+  overflow-y: auto;
 }
 
 .dashboard {
@@ -127,7 +129,7 @@ body {
 .stat-card {
   height: 75px;
   padding: 12px;
-  border-radius: 0;
+  border-radius: 6px;
   color: white;
   min-width: 0;
 }
@@ -139,7 +141,6 @@ body {
 }
 
 .stat-card h2 {
-  display: block;
   margin: 8px 0 0;
   font-size: 27px;
   font-weight: 900;
@@ -174,7 +175,7 @@ body {
   background: #20201f;
   height: 245px;
   padding: 16px;
-  border-radius: 0;
+  border-radius: 6px;
   overflow: hidden;
 }
 
@@ -199,6 +200,7 @@ body {
   background: #20201f;
   height: 155px;
   padding: 12px;
+  border-radius: 6px;
   overflow: hidden;
 }
 
