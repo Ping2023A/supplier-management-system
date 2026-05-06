@@ -137,12 +137,6 @@ const OrdersPage = () => {
         <div className="order-box green">
           Delivered: {orders.filter(o => o.status === "Delivered").length}
         </div>
-        <div className="order-box red">
-          Delayed: {orders.filter(o => o.status === "Delayed").length}
-        </div>
-        <div className="order-box gray">
-          In Transit: {orders.filter(o => o.status === "In Transit").length}
-        </div>
       </div>
 
       {/* TABLE */}
