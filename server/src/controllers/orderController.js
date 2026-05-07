@@ -12,8 +12,7 @@ const security = new Engine({
 exports.getOrders = async (req, res, next) => {
   try {
     const orders = await Order.find();
-    console.log("Fetched orders:", orders.length);
-    res.json(orders); // always return array
+    res.json(orders); // return array, same as before
   } catch (err) {
     console.error("Error fetching orders:", err);
     next(err);
@@ -68,6 +67,7 @@ exports.createOrder = async (req, res, next) => {
     const order = new Order(orderData);
     const savedOrder = await order.save();
 
+    // Auto-create linked delivery
     const delivery = new Delivery({
       order: savedOrder._id,
       supplier: savedOrder.supplier,
@@ -75,7 +75,7 @@ exports.createOrder = async (req, res, next) => {
     });
     await delivery.save();
 
-    // Return only the order object (frontend expects this)
+    // Return only the order object (same as old controller)
     res.status(201).json(savedOrder);
   } catch (err) {
     console.error("Error creating order:", err);
