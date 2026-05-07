@@ -28,8 +28,8 @@ const deliverySchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-// Add virtual id field for frontend compatibility
-deliverySchema.virtual("id").get(function () {
+// Expose a frontend-friendly field without conflicting with "id"
+deliverySchema.virtual("deliveryId").get(function () {
   return this._id.toHexString();
 });
 deliverySchema.set("toJSON", { virtuals: true });

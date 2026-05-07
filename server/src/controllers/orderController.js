@@ -12,7 +12,7 @@ const security = new Engine({
 exports.getOrders = async (req, res, next) => {
   try {
     const orders = await Order.find();
-    console.log("Fetched orders:", orders);
+    console.log("Fetched orders:", orders.length);
     res.json(orders);
   } catch (err) {
     console.error("Error fetching orders:", err);
@@ -79,7 +79,8 @@ exports.createOrder = async (req, res, next) => {
     });
     await delivery.save();
 
-    res.status(201).json(savedOrder);
+    // Return both order and delivery
+    res.status(201).json({ order: savedOrder, delivery });
   } catch (err) {
     console.error("Error creating order:", err);
     next(err);

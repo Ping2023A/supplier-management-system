@@ -7,13 +7,7 @@ const orderSchema = new mongoose.Schema({
   qty: { type: Number, required: true },
   status: { type: String, default: "Pending" },
   category: { type: String, required: true },
-  deliveryDate: { type: String, required: true }, // <-- add this
+  deliveryDate: { type: String, required: true },
 }, { timestamps: true });
-
-// Add virtual id field for frontend compatibility
-orderSchema.virtual("id").get(function () {
-  return this._id.toHexString();
-});
-orderSchema.set("toJSON", { virtuals: true });
 
 module.exports = mongoose.model("Order", orderSchema);
