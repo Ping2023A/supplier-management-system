@@ -1,5 +1,6 @@
 const express = require("express");
 const router = express.Router();
+
 const {
   getDeliveries,
   getDeliveryById,
@@ -8,10 +9,11 @@ const {
   deleteDelivery,
 } = require("../controllers/deliveryController");
 
-router.get("/", getDeliveries);
-router.get("/:id", getDeliveryById);
-router.post("/", createDelivery);
-router.put("/:id", updateDelivery);
-router.delete("/:id", deleteDelivery);
+// Delivery routes
+router.get("/", getDeliveries);          // GET all deliveries
+router.get("/:id", getDeliveryById);     // GET single delivery by ID
+router.post("/", createDelivery);        // CREATE new delivery
+router.put("/:id", updateDelivery);      // UPDATE delivery by ID
+router.delete("/:id", deleteDelivery);   // DELETE delivery by ID
 
 module.exports = router;

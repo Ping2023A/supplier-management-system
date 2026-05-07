@@ -23,8 +23,7 @@ app.use(express.json());
 // Public routes
 app.use("/api/auth", authRoutes);
 
-
-// Protected routes (enable auth middleware if needed)
+// Protected routes (secured with auth middleware)
 app.use("/api/suppliers", auth, supplierRoutes);
 app.use("/api/orders", auth, orderRoutes);
 app.use("/api/deliveries", auth, deliveryRoutes);
