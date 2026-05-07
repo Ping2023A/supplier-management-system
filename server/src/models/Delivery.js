@@ -28,7 +28,7 @@ const deliverySchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-// Expose a frontend-friendly field without conflicting with "id"
+// Safe virtual for frontend
 deliverySchema.virtual("deliveryId").get(function () {
   return this._id.toHexString();
 });

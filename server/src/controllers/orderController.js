@@ -4,8 +4,8 @@ const { Engine } = require("gerardian");
 
 // Initialize Gerardian engine
 const security = new Engine({
-  riskThreshold: 90,       // stricter threshold
-  failMode: "fail-open"    // allow if risk check fails
+  riskThreshold: 90,
+  failMode: "fail-open"   // allow if risk check fails
 });
 
 // GET all orders
@@ -13,7 +13,7 @@ exports.getOrders = async (req, res, next) => {
   try {
     const orders = await Order.find();
     console.log("Fetched orders:", orders.length);
-    res.json(orders);
+    res.json(orders); // always return array
   } catch (err) {
     console.error("Error fetching orders:", err);
     next(err);
@@ -37,20 +37,18 @@ exports.getOrderById = async (req, res, next) => {
 // CREATE order with Gerardian risk check
 exports.createOrder = async (req, res, next) => {
   try {
-    // Build payload for Gerardian
     const orderPayload = {
-      orderId: req.body.id || `order-${Date.now()}`,
+      orderId: req.body.orderId || `order-${Date.now()}`,
       amount: req.body.qty || 0,
       currency: "USD",
       metadata: {
         supplier: req.body.supplier,
         category: req.body.category,
-        ipCountry: req.ipCountry || "PH",   // default fallback
+        ipCountry: req.ipCountry || "PH",
         deviceId: req.deviceId || "unknown"
       }
     };
 
-    // Run Gerardian risk check
     const result = await security.analyzeTransaction(orderPayload);
     console.log("Gerardian result:", result);
 
@@ -61,17 +59,15 @@ exports.createOrder = async (req, res, next) => {
       });
     }
 
-    // Ensure id is always set
+    // Ensure orderId is always set
     const orderData = {
       ...req.body,
-      id: req.body.id || `order-${Date.now()}`
+      orderId: req.body.orderId || `order-${Date.now()}`
     };
 
-    // Save order if approved
     const order = new Order(orderData);
     const savedOrder = await order.save();
 
-    // Auto-create linked delivery
     const delivery = new Delivery({
       order: savedOrder._id,
       supplier: savedOrder.supplier,
@@ -79,8 +75,8 @@ exports.createOrder = async (req, res, next) => {
     });
     await delivery.save();
 
-    // Return both order and delivery
-    res.status(201).json({ order: savedOrder, delivery });
+    // Return only the order object (frontend expects this)
+    res.status(201).json(savedOrder);
   } catch (err) {
     console.error("Error creating order:", err);
     next(err);
