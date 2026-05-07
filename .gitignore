@@ -16,3 +16,12 @@ Thumbs.db
 
 # Environment variables
 .env
+
+# Vite cache
+.vite/
+
+# Test coverage
+coverage/
+
+# IDE settings
+.vscode/
