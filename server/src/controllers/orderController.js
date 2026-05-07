@@ -2,10 +2,10 @@ const Order = require("../models/Order");
 const Delivery = require("../models/Delivery");
 const { Engine } = require("gerardian");
 
-// Initialize Gerardian engine
+// Gerardian engine
 const security = new Engine({
   riskThreshold: 90,
-  failMode: "fail-open"   // allow if risk check fails
+  failMode: "fail-open"
 });
 
 // GET all orders
@@ -33,11 +33,11 @@ exports.getOrderById = async (req, res, next) => {
   }
 };
 
-// CREATE order with Gerardian risk check
+// CREATE order with Gerardian
 exports.createOrder = async (req, res, next) => {
   try {
     const orderPayload = {
-      orderId: req.body.orderId || `order-${Date.now()}`,
+      orderId: req.body.id || `order-${Date.now()}`,
       amount: req.body.qty || 0,
       currency: "USD",
       metadata: {
@@ -58,16 +58,16 @@ exports.createOrder = async (req, res, next) => {
       });
     }
 
-    // Ensure orderId is always set
+    // Always set id
     const orderData = {
       ...req.body,
-      orderId: req.body.orderId || `order-${Date.now()}`
+      id: req.body.id || `order-${Date.now()}`
     };
 
     const order = new Order(orderData);
     const savedOrder = await order.save();
 
-    // Auto-create linked delivery
+    // Linked delivery
     const delivery = new Delivery({
       order: savedOrder._id,
       supplier: savedOrder.supplier,
@@ -75,8 +75,7 @@ exports.createOrder = async (req, res, next) => {
     });
     await delivery.save();
 
-    // Return only the order object (same as old controller)
-    res.status(201).json(savedOrder);
+    res.status(201).json(savedOrder); // return order only
   } catch (err) {
     console.error("Error creating order:", err);
     next(err);

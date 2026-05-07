@@ -28,10 +28,4 @@ const deliverySchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-// Safe virtual for frontend
-deliverySchema.virtual("deliveryId").get(function () {
-  return this._id.toHexString();
-});
-deliverySchema.set("toJSON", { virtuals: true });
-
 module.exports = mongoose.model("Delivery", deliverySchema);

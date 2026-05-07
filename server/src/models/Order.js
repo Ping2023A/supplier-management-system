@@ -1,7 +1,7 @@
 const mongoose = require("mongoose");
 
 const orderSchema = new mongoose.Schema({
-  orderId: { type: String, required: true, unique: true },
+  id: { type: String, required: true, unique: true }, // keep id, not orderId
   supplier: { type: String, required: true },
   item: { type: String, required: true },
   qty: { type: Number, required: true },
