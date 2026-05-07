@@ -3,10 +3,10 @@ const Delivery = require("../models/Delivery");
 const { Engine } = require("gerardian");
 
 // Initialize Gerardian engine
-const security = new Engine({
-  riskThreshold: 75,       // block if risk >= 75
-  failMode: "fail-closed"  // block if system fails
-});
+// const security = new Engine({
+ //  riskThreshold: 75,       // block if risk >= 75
+ //  failMode: "fail-closed"  // block if system fails
+// });
 
 // GET all orders
 exports.getOrders = async (req, res, next) => {
