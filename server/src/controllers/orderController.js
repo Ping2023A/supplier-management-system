@@ -3,15 +3,16 @@ const Delivery = require("../models/Delivery");
 const { Engine } = require("gerardian");
 
 // Initialize Gerardian engine
-// const security = new Engine({
- //  riskThreshold: 75,       // block if risk >= 75
- //  failMode: "fail-closed"  // block if system fails
-// });
+const security = new Engine({
+  riskThreshold: 90,       // stricter threshold
+  failMode: "fail-open"    // allow if risk check fails
+});
 
 // GET all orders
 exports.getOrders = async (req, res, next) => {
   try {
     const orders = await Order.find();
+    console.log("Fetched orders:", orders);
     res.json(orders);
   } catch (err) {
     console.error("Error fetching orders:", err);
@@ -44,13 +45,14 @@ exports.createOrder = async (req, res, next) => {
       metadata: {
         supplier: req.body.supplier,
         category: req.body.category,
-        ipCountry: req.ipCountry,   // can be resolved from request/session
-        deviceId: req.deviceId      // optional, can be injected
+        ipCountry: req.ipCountry || "PH",   // default fallback
+        deviceId: req.deviceId || "unknown"
       }
     };
 
     // Run Gerardian risk check
     const result = await security.analyzeTransaction(orderPayload);
+    console.log("Gerardian result:", result);
 
     if (result.status === "blocked") {
       return res.status(403).json({
@@ -59,8 +61,14 @@ exports.createOrder = async (req, res, next) => {
       });
     }
 
+    // Ensure id is always set
+    const orderData = {
+      ...req.body,
+      id: req.body.id || `order-${Date.now()}`
+    };
+
     // Save order if approved
-    const order = new Order(req.body);
+    const order = new Order(orderData);
     const savedOrder = await order.save();
 
     // Auto-create linked delivery

@@ -10,4 +10,10 @@ const orderSchema = new mongoose.Schema({
   deliveryDate: { type: String, required: true }, // <-- add this
 }, { timestamps: true });
 
+// Add virtual id field for frontend compatibility
+orderSchema.virtual("id").get(function () {
+  return this._id.toHexString();
+});
+orderSchema.set("toJSON", { virtuals: true });
+
 module.exports = mongoose.model("Order", orderSchema);
