@@ -16,90 +16,154 @@ const OrdersPage = () => {
     supplier: "",
     item: "",
     qty: "",
-    status: "Pending",
     category: "Electronics",
-    deliveryDate: "", // delivery date field
+    deliveryDate: "",
   });
 
-  // Category → prefix mapping
+  const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
+
   const categoryPrefixes = {
     "Clothing and Apparel": "CA",
     "Home and Living": "HL",
-    "Electronics": "E",
+    Electronics: "E",
   };
 
-  // Load orders from backend
-  useEffect(() => {
-    const token = localStorage.getItem("token");
-    axios
-      .get("http://localhost:5000/api/orders", {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      .then((res) => setOrders(res.data))
-      .catch((err) => console.error("Error fetching orders:", err));
-  }, []);
+  const generateOrderId = (category) => {
+    const prefix = categoryPrefixes[category] || "GEN";
+    const randomNumber = Math.floor(1000 + Math.random() * 9000);
+    return `${prefix}-${randomNumber}`;
+  };
 
+  const getAuthHeader = () => {
+    const token = localStorage.getItem("token");
+
+    return {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    };
+  };
+
+  // FETCH ORDERS
+  useEffect(() => {
+    axios
+      .get(`${API_URL}/api/orders`, getAuthHeader())
+      .then((res) => {
+        const orderData = res.data.data || res.data;
+        setOrders(orderData);
+      })
+      .catch((err) => console.error("Error fetching orders:", err));
+  }, [API_URL]);
+
+  // HANDLE INPUT CHANGE
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
+  // CREATE ORDER
   const createOrder = async () => {
-    if (!form.supplier || !form.item || !form.qty || !form.deliveryDate) return;
+    if (
+      !form.supplier ||
+      !form.item ||
+      !form.qty ||
+      !form.deliveryDate
+    ) {
+      alert("Please fill in all required fields.");
+      return;
+    }
 
-    const prefix = categoryPrefixes[form.category] || "GEN";
     const newOrder = {
-      id: `${prefix}-${Math.floor(1000 + Math.random() * 9000)}`,
+      id: generateOrderId(form.category),
       supplier: form.supplier,
       item: form.item,
-      qty: form.qty,
-      status: form.status,
+      qty: Number(form.qty),
+      status: "Pending",
       category: form.category,
       deliveryDate: form.deliveryDate,
     };
 
     try {
-      const token = localStorage.getItem("token");
-      const res = await axios.post("http://localhost:5000/api/orders", newOrder, {
-        headers: { Authorization: `Bearer ${token}` },
+      const res = await axios.post(
+        `${API_URL}/api/orders`,
+        newOrder,
+        getAuthHeader()
+      );
+
+      const savedOrder = res.data.data || res.data;
+
+      setOrders([savedOrder, ...orders]);
+
+      setForm({
+        supplier: "",
+        item: "",
+        qty: "",
+        category: "Electronics",
+        deliveryDate: "",
       });
-      setOrders([res.data, ...orders]);
-      setForm({ supplier: "", item: "", qty: "", status: "Pending", category: "Electronics", deliveryDate: "" });
+
       setShowCreate(false);
     } catch (err) {
       console.error("Error creating order:", err);
+
+      if (err.response?.data?.issues) {
+        alert(err.response.data.issues.join("\n"));
+      } else {
+        alert(err.response?.data?.message || "Failed to create order.");
+      }
     }
   };
 
+  // UPDATE ORDER
   const updateOrder = async () => {
     try {
-      const token = localStorage.getItem("token");
-      const res = await axios.put(`http://localhost:5000/api/orders/${selectedOrder.id}`, selectedOrder, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setOrders(orders.map(o => o.id === selectedOrder.id ? res.data : o));
+      const res = await axios.put(
+        `${API_URL}/api/orders/${selectedOrder.id}`,
+        {
+          ...selectedOrder,
+          qty: Number(selectedOrder.qty),
+        },
+        getAuthHeader()
+      );
+
+      const updatedOrder = res.data.data || res.data;
+
+      setOrders(
+        orders.map((o) =>
+          o.id === selectedOrder.id ? updatedOrder : o
+        )
+      );
+
       setShowEdit(false);
     } catch (err) {
       console.error("Error updating order:", err);
+      alert(err.response?.data?.message || "Failed to update order.");
     }
   };
 
+  // DELETE ORDER
   const deleteOrder = async (id) => {
     try {
-      const token = localStorage.getItem("token");
-      await axios.delete(`http://localhost:5000/api/orders/${id}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      await axios.delete(
+        `${API_URL}/api/orders/${id}`,
+        getAuthHeader()
+      );
+
       setOrders(orders.filter((o) => o.id !== id));
     } catch (err) {
       console.error("Error deleting order:", err);
+      alert(err.response?.data?.message || "Failed to delete order.");
     }
   };
 
+  // FILTER
   const filtered = orders.filter((o) => {
     const matchSearch = Object.values(o).some((v) =>
-      v.toString().toLowerCase().includes(search.toLowerCase())
+      String(v).toLowerCase().includes(search.toLowerCase())
     );
-    const matchFilter = filter === "All" || o.status === filter;
+
+    const matchFilter =
+      filter === "All" || o.status === filter;
+
     return matchSearch && matchFilter;
   });
 
@@ -107,7 +171,10 @@ const OrdersPage = () => {
     <div className="orders-page">
       {/* TOP */}
       <div className="orders-top">
-        <button className="add-order-btn" onClick={() => setShowCreate(true)}>
+        <button
+          className="add-order-btn"
+          onClick={() => setShowCreate(true)}
+        >
           Create Order
         </button>
 
@@ -118,7 +185,12 @@ const OrdersPage = () => {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
-          <select className="filter-select" value={filter} onChange={(e) => setFilter(e.target.value)}>
+
+          <select
+            className="filter-select"
+            value={filter}
+            onChange={(e) => setFilter(e.target.value)}
+          >
             <option value="All">All</option>
             <option value="Pending">Pending</option>
             <option value="Delivered">Delivered</option>
@@ -130,12 +202,24 @@ const OrdersPage = () => {
 
       {/* SUMMARY */}
       <div className="orders-summary">
-        <div className="order-box blue">Total: {orders.length}</div>
-        <div className="order-box orange">
-          Pending: {orders.filter(o => o.status === "Pending").length}
+        <div className="order-box blue">
+          Total: {orders.length}
         </div>
+
+        <div className="order-box orange">
+          Pending:{" "}
+          {
+            orders.filter((o) => o.status === "Pending")
+              .length
+          }
+        </div>
+
         <div className="order-box green">
-          Delivered: {orders.filter(o => o.status === "Delivered").length}
+          Delivered:{" "}
+          {
+            orders.filter((o) => o.status === "Delivered")
+              .length
+          }
         </div>
       </div>
 
@@ -153,6 +237,7 @@ const OrdersPage = () => {
               <th>Actions</th>
             </tr>
           </thead>
+
           <tbody>
             {filtered.map((o) => (
               <tr key={o.id}>
@@ -162,28 +247,36 @@ const OrdersPage = () => {
                 <td>{o.qty}</td>
                 <td>{o.status}</td>
                 <td>{o.category}</td>
+
                 <td>
-                  <button
-                    className="order-table-btn"
-                    onClick={() => {
-                      setSelectedOrder(o);
-                      setShowView(true);
-                    }}
-                  >
-                    View
-                  </button>
-                  <button
-                    className="order-table-btn"
-                    onClick={() => {
-                      setSelectedOrder(o);
-                      setShowEdit(true);
-                    }}
-                  >
-                    Edit
-                  </button>
-                  <button className="order-table-btn" onClick={() => deleteOrder(o.id)}>
-                    Cancel
-                  </button>
+                  <div className="order-actions-cell">
+                    <button
+                      className="order-table-btn"
+                      onClick={() => {
+                        setSelectedOrder(o);
+                        setShowView(true);
+                      }}
+                    >
+                      View
+                    </button>
+
+                    <button
+                      className="order-table-btn"
+                      onClick={() => {
+                        setSelectedOrder(o);
+                        setShowEdit(true);
+                      }}
+                    >
+                      Edit
+                    </button>
+
+                    <button
+                      className="order-table-btn"
+                      onClick={() => deleteOrder(o.id)}
+                    >
+                      Cancel
+                    </button>
+                  </div>
                 </td>
               </tr>
             ))}
@@ -196,42 +289,77 @@ const OrdersPage = () => {
         <div className="modal-overlay">
           <div className="order-modal">
             <h2>Create Order</h2>
+
             <div className="modal-group">
               <label>Supplier</label>
-              <input name="supplier" value={form.supplier} onChange={handleChange} />
+
+              <input
+                name="supplier"
+                value={form.supplier}
+                onChange={handleChange}
+              />
             </div>
+
             <div className="modal-group">
               <label>Item</label>
-              <input name="item" value={form.item} onChange={handleChange} />
+
+              <input
+                name="item"
+                value={form.item}
+                onChange={handleChange}
+              />
             </div>
+
             <div className="modal-group">
               <label>Qty</label>
-              <input name="qty" value={form.qty} onChange={handleChange} />
+
+              <input
+                type="number"
+                name="qty"
+                value={form.qty}
+                onChange={handleChange}
+              />
             </div>
-            <div className="modal-group">
-              <label>Status</label>
-              <select name="status" value={form.status} onChange={handleChange}>
-                <option>Pending</option>
-                <option>Delivered</option>
-                <option>Delayed</option>
-                <option>In Transit</option>
-              </select>
-            </div>
+
             <div className="modal-group">
               <label>Category</label>
-              <select name="category" value={form.category} onChange={handleChange}>
+
+              <select
+                name="category"
+                value={form.category}
+                onChange={handleChange}
+              >
                 <option>Clothing and Apparel</option>
                 <option>Home and Living</option>
                 <option>Electronics</option>
               </select>
             </div>
+
             <div className="modal-group">
               <label>Delivery Date</label>
-              <input type="date" name="deliveryDate" value={form.deliveryDate} onChange={handleChange} />
+
+              <input
+                type="date"
+                name="deliveryDate"
+                value={form.deliveryDate}
+                onChange={handleChange}
+              />
             </div>
+
             <div className="modal-buttons">
-              <button className="save-btn" onClick={createOrder}>Save</button>
-              <button className="close-btn" onClick={() => setShowCreate(false)}>Cancel</button>
+              <button
+                className="save-btn"
+                onClick={createOrder}
+              >
+                Save
+              </button>
+
+              <button
+                className="close-btn"
+                onClick={() => setShowCreate(false)}
+              >
+                Cancel
+              </button>
             </div>
           </div>
         </div>
@@ -242,17 +370,45 @@ const OrdersPage = () => {
         <div className="modal-overlay">
           <div className="order-modal">
             <h2>Order Details</h2>
+
             <div className="view-order-details">
-              <p><b>ID:</b> {selectedOrder.id}</p>
-              <p><b>Supplier:</b> {selectedOrder.supplier}</p>
-              <p><b>Item:</b> {selectedOrder.item}</p>
-              <p><b>Qty:</b> {selectedOrder.qty}</p>
-              <p><b>Status:</b> {selectedOrder.status}</p>
-              <p><b>Category:</b> {selectedOrder.category}</p>
-              <p><b>Delivery Date:</b> {selectedOrder.deliveryDate}</p>
+              <p>
+                <b>ID:</b> {selectedOrder.id}
+              </p>
+
+              <p>
+                <b>Supplier:</b> {selectedOrder.supplier}
+              </p>
+
+              <p>
+                <b>Item:</b> {selectedOrder.item}
+              </p>
+
+              <p>
+                <b>Qty:</b> {selectedOrder.qty}
+              </p>
+
+              <p>
+                <b>Status:</b> {selectedOrder.status}
+              </p>
+
+              <p>
+                <b>Category:</b> {selectedOrder.category}
+              </p>
+
+              <p>
+                <b>Delivery Date:</b>{" "}
+                {selectedOrder.deliveryDate}
+              </p>
             </div>
+
             <div className="modal-buttons">
-              <button className="close-btn" onClick={() => setShowView(false)}>Close</button>
+              <button
+                className="close-btn"
+                onClick={() => setShowView(false)}
+              >
+                Close
+              </button>
             </div>
           </div>
         </div>
@@ -263,58 +419,60 @@ const OrdersPage = () => {
         <div className="modal-overlay">
           <div className="order-modal">
             <h2>Edit Order</h2>
+
             <div className="modal-group">
               <label>Supplier</label>
+
               <input
-                name="supplier"
                 value={selectedOrder.supplier}
                 onChange={(e) =>
-                  setSelectedOrder({ ...selectedOrder, supplier: e.target.value })
+                  setSelectedOrder({
+                    ...selectedOrder,
+                    supplier: e.target.value,
+                  })
                 }
               />
             </div>
+
             <div className="modal-group">
               <label>Item</label>
+
               <input
-                name="item"
                 value={selectedOrder.item}
                 onChange={(e) =>
-                  setSelectedOrder({ ...selectedOrder, item: e.target.value })
+                  setSelectedOrder({
+                    ...selectedOrder,
+                    item: e.target.value,
+                  })
                 }
               />
             </div>
+
             <div className="modal-group">
               <label>Qty</label>
+
               <input
-                name="qty"
+                type="number"
                 value={selectedOrder.qty}
                 onChange={(e) =>
-                  setSelectedOrder({ ...selectedOrder, qty: e.target.value })
+                  setSelectedOrder({
+                    ...selectedOrder,
+                    qty: e.target.value,
+                  })
                 }
               />
             </div>
-            <div className="modal-group">
-              <label>Status</label>
-              <select
-                name="status"
-                value={selectedOrder.status}
-                onChange={(e) =>
-                  setSelectedOrder({ ...selectedOrder, status: e.target.value })
-                }
-              >
-                <option>Pending</option>
-                <option>Delivered</option>
-                <option>Delayed</option>
-                <option>In Transit</option>
-              </select>
-            </div>
+
             <div className="modal-group">
               <label>Category</label>
+
               <select
-                name="category"
                 value={selectedOrder.category}
                 onChange={(e) =>
-                  setSelectedOrder({ ...selectedOrder, category: e.target.value })
+                  setSelectedOrder({
+                    ...selectedOrder,
+                    category: e.target.value,
+                  })
                 }
               >
                 <option>Clothing and Apparel</option>
@@ -322,20 +480,36 @@ const OrdersPage = () => {
                 <option>Electronics</option>
               </select>
             </div>
+
             <div className="modal-group">
               <label>Delivery Date</label>
+
               <input
                 type="date"
-                name="deliveryDate"
                 value={selectedOrder.deliveryDate}
                 onChange={(e) =>
-                  setSelectedOrder({ ...selectedOrder, deliveryDate: e.target.value })
+                  setSelectedOrder({
+                    ...selectedOrder,
+                    deliveryDate: e.target.value,
+                  })
                 }
               />
             </div>
+
             <div className="modal-buttons">
-              <button className="save-btn" onClick={updateOrder}>Save</button>
-              <button className="close-btn" onClick={() => setShowEdit(false)}>Cancel</button>
+              <button
+                className="save-btn"
+                onClick={updateOrder}
+              >
+                Save
+              </button>
+
+              <button
+                className="close-btn"
+                onClick={() => setShowEdit(false)}
+              >
+                Cancel
+              </button>
             </div>
           </div>
         </div>
@@ -343,5 +517,4 @@ const OrdersPage = () => {
     </div>
   );
 };
-
 export default OrdersPage;

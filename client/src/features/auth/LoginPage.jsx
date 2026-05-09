@@ -6,6 +6,9 @@ import logo from "../../assets/logos/logo.png";
 
 const LoginPage = () => {
   const navigate = useNavigate();
+
+  const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -15,16 +18,22 @@ const LoginPage = () => {
     setError("");
 
     try {
-      const res = await axios.post("http://localhost:5000/api/auth/login", {
+      const res = await axios.post(`${API_URL}/api/auth/login`, {
         email,
         password,
       });
 
       if (res.data.token) {
         localStorage.setItem("token", res.data.token);
+
         if (res.data.role) {
           localStorage.setItem("role", res.data.role);
         }
+
+        if (res.data.name) {
+          localStorage.setItem("name", res.data.name);
+        }
+
         navigate("/dashboard");
       }
     } catch (err) {
@@ -46,6 +55,7 @@ const LoginPage = () => {
             onChange={(e) => setEmail(e.target.value)}
             required
           />
+
           <input
             type="password"
             placeholder="Password"
@@ -59,8 +69,6 @@ const LoginPage = () => {
               <input type="checkbox" />
               <span>Remember Me</span>
             </div>
-            {/* Forgot Password link disabled until backend route exists */}
-            {/* <span className="forgot-link">Forgot Password?</span> */}
           </div>
 
           <button type="submit" className="login-btn">

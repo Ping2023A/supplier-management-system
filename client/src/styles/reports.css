@@ -2,10 +2,10 @@
   width: 100%;
   height: 100%;
   color: white;
-  overflow: hidden;
+  overflow: auto;
 }
 
-/* ================= TOP BAR ================= */
+/* TOP BAR */
 .reports-top {
   height: 44px;
   display: flex;
@@ -35,7 +35,6 @@
   align-items: center;
 }
 
-/* ================= INPUTS ================= */
 .search-input,
 .filter-select {
   padding: 8px 12px;
@@ -46,21 +45,53 @@
   outline: none;
 }
 
-/* ================= CHARTS ================= */
-.reports-charts {
+/* SUMMARY */
+.reports-summary {
   margin-top: 18px;
-  height: 180px;
+  height: 70px;
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 28px;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
 }
 
-.chart-box {
+.report-box {
+  padding: 16px;
+  font-size: 15px;
+  font-weight: 800;
+}
+
+.report-box.blue {
+  background: #2f4380;
+}
+
+.report-box.orange {
+  background: #c97035;
+}
+
+.report-box.green {
+  background: #2c6b20;
+}
+
+.report-box.red {
+  background: #6d1f1f;
+}
+
+/* MAIN CARDS */
+.reports-main-grid {
+  margin-top: 18px;
+  height: 245px;
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 20px;
+}
+
+.report-card {
   background: #20201f;
   padding: 14px;
+  overflow: hidden;
 }
 
-.chart-box h4 {
+.report-card h4 {
   margin: 0 0 12px;
   font-size: 14px;
   font-weight: 800;
@@ -68,16 +99,71 @@
   padding-bottom: 8px;
 }
 
-.chart-placeholder {
-  height: 130px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #bbb;
-  font-size: 13px;
+/* RECOMMENDATION TABLE */
+.recommendation-table-wrapper {
+  height: 175px;
+  overflow-y: auto;
 }
 
-/* ================= TITLE ================= */
+.recommendation-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.recommendation-table thead {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+}
+
+.recommendation-table thead tr {
+  height: 36px;
+  background: #1c1c1c;
+}
+
+.recommendation-table th,
+.recommendation-table td {
+  padding: 0 14px;
+  text-align: left;
+  vertical-align: middle;
+}
+
+.recommendation-table tbody tr {
+  height: 34px;
+}
+
+.recommendation-table tbody tr:nth-child(odd) {
+  background: #393a35;
+}
+
+.recommendation-table tbody tr:nth-child(even) {
+  background: #20201f;
+}
+
+/* ANALYTICS */
+.analytics-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.analytics-row {
+  height: 36px;
+  border-bottom: 1px solid #555;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.analytics-row b {
+  color: #15c957;
+}
+
+/* SYSTEM ACTIVITY */
 .reports-title {
   margin: 14px 0 8px;
   font-size: 18px;
@@ -86,10 +172,9 @@
   padding-bottom: 6px;
 }
 
-/* ================= TABLE ================= */
 .reports-table-wrapper {
-  height: calc(100vh - 260px);
-  overflow: hidden;
+  height: 190px;
+  overflow-y: auto;
 }
 
 .reports-table {
@@ -98,6 +183,12 @@
   table-layout: fixed;
   font-size: 13px;
   font-weight: 700;
+}
+
+.reports-table thead {
+  position: sticky;
+  top: 0;
+  z-index: 2;
 }
 
 .reports-table thead tr {
@@ -130,13 +221,12 @@
   padding: 0 20px;
 }
 
-/* ================= BUTTONS ================= */
+/* BUTTONS */
 .report-btn {
   background: #2e2e2e;
   color: white;
   border: none;
   padding: 6px 14px;
-  margin-right: 10px;
   font-size: 11px;
   font-weight: 700;
   cursor: pointer;
@@ -146,7 +236,7 @@
   background: #444;
 }
 
-/* ================= MODAL ================= */
+/* MODAL */
 .modal-overlay {
   position: fixed;
   inset: 0;
@@ -161,14 +251,12 @@
   width: 420px;
   max-height: 80vh;
   overflow-y: auto;
-
   background: #1f1f1f;
   color: white;
   padding: 25px;
   border-radius: 10px;
 }
 
-/* MODAL TEXT */
 .report-modal h2 {
   margin-bottom: 15px;
 }
@@ -178,7 +266,6 @@
   font-size: 14px;
 }
 
-/* JSON BLOCK */
 .report-modal pre {
   background: #2a2a2a;
   padding: 10px;
@@ -187,7 +274,7 @@
   overflow-x: auto;
 }
 
-/* BUTTONS */
+/* MODAL BUTTONS */
 .modal-buttons {
   display: flex;
   justify-content: flex-end;

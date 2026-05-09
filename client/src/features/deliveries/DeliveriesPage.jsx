@@ -7,43 +7,44 @@ const DeliveriesPage = () => {
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("All");
 
-  // Load deliveries from backend (orders act as deliveries)
+  const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
+
   useEffect(() => {
-    const token = localStorage.getItem("token");
     axios
-      .get("http://localhost:5000/api/orders", {
-        headers: { Authorization: `Bearer ${token}` },
-      })
+      .get(`${API_URL}/api/integration/logistics/delivery-status`)
       .then((res) => {
-        // Map orders into deliveries with shipmentId
-        const mapped = res.data.map((o) => ({
-          shipmentId: `Shipment-${Math.floor(1000 + Math.random() * 9000)}`,
-          order: o.id,
-          supplier: o.supplier,
-          status: o.status,
-          date: o.deliveryDate, // use actual deliveryDate from OrdersPage
-          item: o.item,
-          qty: o.qty,
-          category: o.category,
+        const mapped = (res.data.data || []).map((d) => ({
+          shipmentId:
+            d.trackingNumber || d.shipmentId || `Shipment-${d.orderId}`,
+          order: d.orderId,
+          supplier: d.supplier,
+          status: d.status || "Pending",
+          date: d.estimatedArrival
+            ? new Date(d.estimatedArrival).toLocaleDateString()
+            : "No ETA",
+          item: d.item,
+          qty: d.qty,
+          category: d.category,
         }));
+
         setDeliveries(mapped);
       })
       .catch((err) => console.error("Error fetching deliveries:", err));
-  }, []);
+  }, [API_URL]);
 
-  // FILTER
   const filtered = deliveries.filter((d) => {
     const matchFilter = filter === "All" || d.status === filter;
+
     const matchSearch =
-      d.shipmentId.toLowerCase().includes(search.toLowerCase()) ||
-      d.supplier.toLowerCase().includes(search.toLowerCase()) ||
-      d.order.toLowerCase().includes(search.toLowerCase());
+      String(d.shipmentId).toLowerCase().includes(search.toLowerCase()) ||
+      String(d.supplier).toLowerCase().includes(search.toLowerCase()) ||
+      String(d.order).toLowerCase().includes(search.toLowerCase());
+
     return matchFilter && matchSearch;
   });
 
   return (
     <div className="deliveries-page">
-      {/* TOP */}
       <div className="deliveries-top">
         <div className="deliveries-actions">
           <input
@@ -52,12 +53,14 @@ const DeliveriesPage = () => {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
+
           <select
             className="filter-select"
             value={filter}
             onChange={(e) => setFilter(e.target.value)}
           >
             <option value="All">All</option>
+            <option value="Pending">Pending</option>
             <option value="In Transit">In Transit</option>
             <option value="Delivered">Delivered</option>
             <option value="Delayed">Delayed</option>
@@ -65,52 +68,53 @@ const DeliveriesPage = () => {
         </div>
       </div>
 
-      {/* SUMMARY */}
       <div className="deliveries-summary">
         <div className="delivery-box blue">
-          In Transit: {deliveries.filter(d => d.status === "In Transit").length}
+          In Transit:{" "}
+          {deliveries.filter((d) => d.status === "In Transit").length}
         </div>
+
         <div className="delivery-box green">
-          Delivered: {deliveries.filter(d => d.status === "Delivered").length}
+          Delivered:{" "}
+          {deliveries.filter((d) => d.status === "Delivered").length}
         </div>
+
         <div className="delivery-box red">
-          Delayed: {deliveries.filter(d => d.status === "Delayed").length}
+          Delayed: {deliveries.filter((d) => d.status === "Delayed").length}
         </div>
       </div>
 
-      {/* TABLE */}
-      <table className="deliveries-table">
-        <thead>
-          <tr>
-            <th>Shipment</th>
-            <th>Order</th>
-            <th>Supplier</th>
-            <th>Item</th>
-            <th>Qty</th>
-            <th>Status</th>
-            <th>Category</th>
-            <th>Delivery Date</th>
-          </tr>
-        </thead>
-        <tbody>
-          {filtered.map((d) => (
-            <tr key={d.shipmentId}>
-              <td>{d.shipmentId}</td>
-              <td>{d.order}</td>
-              <td>{d.supplier}</td>
-              <td>{d.item}</td>
-              <td>{d.qty}</td>
-              <td>
-                <span className={`status-badge ${d.status.toLowerCase().replace(" ", "-")}`}>
-                  {d.status}
-                </span>
-              </td>
-              <td>{d.category}</td>
-              <td>{d.date}</td>
+      <div className="deliveries-table-wrapper">
+        <table className="deliveries-table">
+          <thead>
+            <tr>
+              <th>Shipment</th>
+              <th>Order</th>
+              <th>Supplier</th>
+              <th>Item</th>
+              <th>Qty</th>
+              <th>Status</th>
+              <th>Category</th>
+              <th>Delivery Date</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+
+          <tbody>
+            {filtered.map((d) => (
+              <tr key={d.order}>
+                <td>{d.shipmentId}</td>
+                <td>{d.order}</td>
+                <td>{d.supplier}</td>
+                <td>{d.item}</td>
+                <td>{d.qty}</td>
+                <td>{d.status}</td>
+                <td>{d.category}</td>
+                <td>{d.date}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 };

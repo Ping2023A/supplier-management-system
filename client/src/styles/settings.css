@@ -5,27 +5,8 @@
   overflow: auto;
 }
 
-/* TOP */
-.settings-top {
-  height: 44px;
-  display: flex;
-  align-items: center;
-}
-
-.add-user-btn {
-  width: 180px;
-  height: 38px;
-  background: #2947a3;
-  color: white;
-  border: none;
-  font-size: 14px;
-  font-weight: 800;
-  cursor: pointer;
-}
-
 /* GRID */
 .settings-grid {
-  margin-top: 18px;
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 28px;
@@ -36,6 +17,7 @@
   background: #20201f;
   padding: 14px;
   overflow: hidden;
+  min-height: 280px;
 }
 
 .settings-card h3,
@@ -47,86 +29,44 @@
   padding-bottom: 8px;
 }
 
-/* TABLES */
-.settings-table,
-.audit-table {
-  width: 100%;
-  border-collapse: collapse;
-  table-layout: fixed;
-  font-size: 12px;
-  font-weight: 700;
-}
-
-.settings-table thead tr,
-.audit-table thead tr {
-  height: 36px;
-  background: #1c1c1c;
-}
-
-.settings-table th,
-.settings-table td,
-.audit-table th,
-.audit-table td {
-  padding: 0 14px;
-  text-align: left;
-  vertical-align: middle;
-}
-
-.settings-table tbody tr,
-.audit-table tbody tr {
-  height: 32px;
-}
-
-.settings-table tbody tr:nth-child(odd),
-.audit-table tbody tr:nth-child(odd) {
-  background: #393a35;
-}
-
-.settings-table tbody tr:nth-child(even),
-.audit-table tbody tr:nth-child(even) {
-  background: #20201f;
-}
-
-/* USER STATUS */
-.user-status {
-  display: inline-block;
-  min-width: 70px;
-  padding: 4px 8px;
-  text-align: center;
-  font-size: 10px;
-  font-weight: 800;
-  color: white;
-}
-
-.user-status.active {
-  background: #2c6b20;
-}
-
-.user-status.inactive {
-  background: #d00000;
-}
-
-/* ROWS */
-.settings-row {
-  height: 42px;
-  border-bottom: 1px solid #555;
+/* USER MANAGEMENT HEADER */
+.settings-card-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  font-size: 13px;
-  font-weight: 700;
+  margin-bottom: 12px;
+  border-bottom: 1px solid #777;
+  padding-bottom: 8px;
 }
 
-.fraud-row {
-  height: 36px;
-  border-bottom: 1px solid #555;
-  display: flex;
-  align-items: center;
-  font-size: 13px;
-  font-weight: 700;
+.settings-card-header .settings-card-title {
+  margin: 0;
+  border-bottom: none;
+  padding-bottom: 0;
 }
 
 /* BUTTONS */
+.add-user-btn {
+  width: 180px;
+  height: 38px;
+  background: #2947a3;
+  color: white;
+  border: none;
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.add-user-btn.inside-card {
+  width: 110px;
+  height: 30px;
+  font-size: 11px;
+}
+
+.add-user-btn:hover {
+  background: #1f3a85;
+}
+
 .mini-btn {
   background: #2e2e2e;
   color: white;
@@ -153,6 +93,128 @@
   cursor: pointer;
 }
 
+.view-alerts-btn:hover {
+  background: #1f3a85;
+}
+
+/* TABLES */
+.settings-table-wrapper {
+  width: 100%;
+  height: 190px;
+  overflow-y: auto;
+}
+
+.settings-table,
+.audit-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.settings-table thead,
+.audit-table thead {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+}
+
+.settings-table thead tr,
+.audit-table thead tr {
+  height: 36px;
+  background: #1c1c1c;
+}
+
+.settings-table th,
+.settings-table td,
+.audit-table th,
+.audit-table td {
+  padding: 0 14px;
+  text-align: left;
+  vertical-align: middle;
+}
+
+.settings-table tbody tr,
+.audit-table tbody tr {
+  height: 40px;
+}
+
+.settings-table tbody tr:nth-child(odd),
+.audit-table tbody tr:nth-child(odd) {
+  background: #393a35;
+}
+
+.settings-table tbody tr:nth-child(even),
+.audit-table tbody tr:nth-child(even) {
+  background: #20201f;
+}
+
+.settings-table th:nth-child(1),
+.settings-table td:nth-child(1) {
+  width: 25%;
+}
+
+.settings-table th:nth-child(2),
+.settings-table td:nth-child(2) {
+  width: 35%;
+  word-break: break-word;
+}
+
+.settings-table th:nth-child(3),
+.settings-table td:nth-child(3) {
+  width: 20%;
+}
+
+.settings-table th:nth-child(4),
+.settings-table td:nth-child(4) {
+  width: 20%;
+}
+
+.empty-cell {
+  text-align: center;
+  color: #bbb;
+}
+
+/* USER STATUS */
+.user-status {
+  display: inline-block;
+  min-width: 70px;
+  padding: 4px 8px;
+  text-align: center;
+  font-size: 10px;
+  font-weight: 800;
+  color: white;
+}
+
+.user-status.active {
+  background: #2c6b20;
+}
+
+.user-status.inactive {
+  background: #d00000;
+}
+
+/* SETTINGS ROWS */
+.settings-row {
+  height: 52px;
+  border-bottom: 1px solid #555;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.fraud-row {
+  height: 44px;
+  border-bottom: 1px solid #555;
+  display: flex;
+  align-items: center;
+  font-size: 13px;
+  font-weight: 700;
+}
+
 .warning-text {
   color: #ffb000;
   margin-left: 4px;
@@ -163,23 +225,19 @@
   margin-left: 4px;
 }
 
-/* ================= AUDIT LOG FIX ================= */
-
-/* FIXED HEIGHT CARD */
+/* AUDIT */
 .audit-card {
-  height: 320px;              /* 👈 prevents resizing */
+  height: 320px;
   display: flex;
   flex-direction: column;
 }
 
-/* SCROLLABLE TABLE AREA */
 .audit-table {
   display: block;
-  height: 180px;              /* 👈 fixed table area */
+  height: 220px;
   overflow-y: auto;
 }
 
-/* KEEP HEADER FIXED */
 .audit-table thead {
   display: table;
   width: 100%;
@@ -191,46 +249,20 @@
   width: 100%;
 }
 
-/* ROW WIDTH FIX */
 .audit-table tr {
   display: table;
   width: 100%;
   table-layout: fixed;
 }
 
-/* PAGINATION FIXED AT BOTTOM */
-.pagination {
-  margin-top: auto;           /* 👈 pushes to bottom */
-  display: flex;
-  justify-content: flex-end;
-  gap: 8px;
-  padding-top: 10px;
-}
-
-.pagination button {
-  min-width: 32px;
-  height: 32px;
-  background: #2e2e2e;
-  color: white;
-  border: none;
-  font-size: 12px;
-  font-weight: 700;
-  cursor: pointer;
-}
-
-.pagination button:hover {
-  background: #444;
-}
-
-/* ================= MODALS ================= */
-
+/* MODALS */
 .modal-overlay {
   position: fixed;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0,0,0,0.6);
+  background: rgba(0, 0, 0, 0.65);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -245,16 +277,27 @@
   border-radius: 10px;
 }
 
+.report-modal h3 {
+  margin-top: 0;
+}
+
+.report-modal p {
+  font-size: 14px;
+  font-weight: 700;
+}
+
 /* INPUTS */
 .search-input,
 .filter-select {
   width: 100%;
+  box-sizing: border-box;
   margin-bottom: 12px;
   padding: 10px;
   border: none;
   border-radius: 5px;
   background: #2f2f2f;
   color: white;
+  outline: none;
 }
 
 /* MODAL BUTTONS */
@@ -286,4 +329,44 @@
 
 .close-btn:hover {
   background: #777;
+}
+
+.settings-actions-cell {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.danger-btn {
+  background: #8b1e1e !important;
+}
+
+.danger-btn:hover {
+  background: #a62b2b !important;
+}
+
+.settings-table th:nth-child(1),
+.settings-table td:nth-child(1) {
+  width: 20%;
+}
+
+.settings-table th:nth-child(2),
+.settings-table td:nth-child(2) {
+  width: 30%;
+  word-break: break-word;
+}
+
+.settings-table th:nth-child(3),
+.settings-table td:nth-child(3) {
+  width: 15%;
+}
+
+.settings-table th:nth-child(4),
+.settings-table td:nth-child(4) {
+  width: 15%;
+}
+
+.settings-table th:nth-child(5),
+.settings-table td:nth-child(5) {
+  width: 20%;
 }

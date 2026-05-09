@@ -1,43 +1,119 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import axios from "axios";
 import "../../styles/reports.css";
 
 const ReportsPage = () => {
-  const [suppliers, setSuppliers] = useState([
-    { name: "ABC Electronics", contact: "John Carter", location: "New York", performance: 92, status: "Active" },
-    { name: "Global Textiles", contact: "Sarah Lee", location: "LA", performance: 87, status: "Active" },
-    { name: "Nexa Solutions", contact: "Michael Tan", location: "Toronto", performance: 75, status: "At Risk" },
-  ]);
+  const [recommendations, setRecommendations] = useState([]);
+  const [deliveries, setDeliveries] = useState([]);
+  const [orders, setOrders] = useState([]);
 
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState("All");
-
   const [view, setView] = useState(null);
-  const [deleteItem, setDeleteItem] = useState(null);
   const [showReport, setShowReport] = useState(false);
 
-  const filtered = suppliers.filter((s) => {
-    const matchSearch =
-      s.name.toLowerCase().includes(search.toLowerCase()) ||
-      s.contact.toLowerCase().includes(search.toLowerCase());
+  const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
-    const matchFilter = filter === "All" || s.status === filter;
+  useEffect(() => {
+    const fetchReportsData = async () => {
+      try {
+        const [recommendationRes, deliveryRes, orderRes] =
+          await Promise.all([
+            axios.get(
+              `${API_URL}/api/integration/forecasting/recommendations`
+            ),
+            axios.get(
+              `${API_URL}/api/integration/logistics/delivery-status`
+            ),
+            axios.get(
+              `${API_URL}/api/integration/inventory/orders`
+            ),
+          ]);
+
+        setRecommendations(recommendationRes.data.data || []);
+        setDeliveries(deliveryRes.data.data || []);
+        setOrders(orderRes.data.data || []);
+      } catch (err) {
+        console.error("Reports fetch error:", err);
+      }
+    };
+
+    fetchReportsData();
+  }, [API_URL]);
+
+  const filteredRecommendations = recommendations.filter((r) => {
+    const matchSearch =
+      String(r.item).toLowerCase().includes(search.toLowerCase()) ||
+      String(r.category).toLowerCase().includes(search.toLowerCase()) ||
+      String(r.reason).toLowerCase().includes(search.toLowerCase());
+
+    const priority =
+      Number(r.recommendedStock) >= 50 ? "High" : "Normal";
+
+    const matchFilter =
+      filter === "All" || priority === filter;
 
     return matchSearch && matchFilter;
   });
 
+  const highPriorityCount = recommendations.filter(
+    (r) => Number(r.recommendedStock) >= 50
+  ).length;
+
+  const lowStockCount = recommendations.filter(
+    (r) => Number(r.recommendedStock) >= 30
+  ).length;
+
+  const deliveredCount = deliveries.filter(
+    (d) => d.status === "Delivered"
+  ).length;
+
+  const inTransitCount = deliveries.filter(
+    (d) => d.status === "In Transit"
+  ).length;
+
+  const delayedCount = deliveries.filter(
+    (d) => d.status === "Delayed"
+  ).length;
+
+  const pendingCount = deliveries.filter(
+    (d) => d.status === "Pending"
+  ).length;
+
+  const activityLogs = [
+    ...orders.slice(0, 3).map((o) => ({
+      type: "Orders",
+      description: `Created order ${o.id} for ${o.item}`,
+      date: o.createdAt,
+    })),
+
+    ...deliveries.slice(0, 3).map((d) => ({
+      type: "Logistics",
+      description: `${d.orderId} status is ${d.status}`,
+      date: d.updatedAt || d.createdAt,
+    })),
+
+    ...recommendations.slice(0, 3).map((r) => ({
+      type: "Forecasting",
+      description: `Recommended ${r.recommendedStock} stock for ${r.item}`,
+      date: r.createdAt,
+    })),
+  ];
+
   return (
     <div className="reports-page">
-
-      {/* TOP */}
       <div className="reports-top">
-        <button className="generate-report-btn" onClick={() => setShowReport(true)}>
+        <button
+          className="generate-report-btn"
+          onClick={() => setShowReport(true)}
+        >
           Generate Report
         </button>
 
         <div className="reports-actions">
           <input
             className="search-input"
-            placeholder="Search..."
+            placeholder="Search recommendations..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
@@ -48,53 +124,130 @@ const ReportsPage = () => {
             onChange={(e) => setFilter(e.target.value)}
           >
             <option value="All">All</option>
-            <option value="Active">Active</option>
-            <option value="At Risk">At Risk</option>
+            <option value="High">High Priority</option>
+            <option value="Normal">Normal Priority</option>
           </select>
         </div>
       </div>
 
-      {/* CHARTS */}
-      <div className="reports-charts">
-        <div className="chart-box">
-          <h4>Supplier Performance</h4>
-          <div className="chart-placeholder">Chart</div>
+      <div className="reports-summary">
+        <div className="report-box blue">
+          Total Recommendations: {recommendations.length}
         </div>
 
-        <div className="chart-box">
-          <h4>Demand Forecast</h4>
-          <div className="chart-placeholder">Chart</div>
+        <div className="report-box orange">
+          High Priority: {highPriorityCount}
+        </div>
+
+        <div className="report-box green">
+          Low Stock Items: {lowStockCount}
+        </div>
+
+        <div className="report-box red">
+          Delayed Deliveries: {delayedCount}
         </div>
       </div>
 
-      {/* TABLE */}
-      <h3 className="reports-title">Suppliers</h3>
+      <div className="reports-main-grid">
+        <div className="report-card">
+          <h4>Stock Recommendations</h4>
+
+          <div className="recommendation-table-wrapper">
+            <table className="recommendation-table">
+              <thead>
+                <tr>
+                  <th>Item</th>
+                  <th>Category</th>
+                  <th>Recommended</th>
+                  <th>Priority</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+
+              <tbody>
+                {filteredRecommendations.map((r) => {
+                  const priority =
+                    Number(r.recommendedStock) >= 50
+                      ? "High"
+                      : "Normal";
+
+                  return (
+                    <tr key={r._id}>
+                      <td>{r.item}</td>
+                      <td>{r.category}</td>
+                      <td>{r.recommendedStock}</td>
+                      <td>{priority}</td>
+
+                      <td>
+                        <button
+                          className="report-btn"
+                          onClick={() => setView(r)}
+                        >
+                          View
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div className="report-card">
+          <h4>Logistics Analytics</h4>
+
+          <div className="analytics-list">
+            <div className="analytics-row">
+              <span>Delivered Orders</span>
+              <b>{deliveredCount}</b>
+            </div>
+
+            <div className="analytics-row">
+              <span>In Transit Orders</span>
+              <b>{inTransitCount}</b>
+            </div>
+
+            <div className="analytics-row">
+              <span>Pending Orders</span>
+              <b>{pendingCount}</b>
+            </div>
+
+            <div className="analytics-row">
+              <span>Delayed Deliveries</span>
+              <b>{delayedCount}</b>
+            </div>
+
+            <div className="analytics-row">
+              <span>Total Orders</span>
+              <b>{orders.length}</b>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <h3 className="reports-title">System Activity</h3>
 
       <div className="reports-table-wrapper">
         <table className="reports-table">
           <thead>
             <tr>
-              <th>Name</th>
-              <th>Contact</th>
-              <th>Location</th>
-              <th>Performance</th>
-              <th>Status</th>
-              <th>Actions</th>
+              <th>Subsystem</th>
+              <th>Activity</th>
+              <th>Date</th>
             </tr>
           </thead>
 
           <tbody>
-            {filtered.map((s, i) => (
-              <tr key={i}>
-                <td>{s.name}</td>
-                <td>{s.contact}</td>
-                <td>{s.location}</td>
-                <td>{s.performance}%</td>
-                <td>{s.status}</td>
+            {activityLogs.map((a, index) => (
+              <tr key={index}>
+                <td>{a.type}</td>
+                <td>{a.description}</td>
 
                 <td>
-                  <button className="report-btn" onClick={() => setView(s)}>View</button>
-                  <button className="report-btn" onClick={() => setDeleteItem(s)}>Delete</button>
+                  {a.date
+                    ? new Date(a.date).toLocaleDateString()
+                    : "N/A"}
                 </td>
               </tr>
             ))}
@@ -106,72 +259,79 @@ const ReportsPage = () => {
       {showReport && (
         <div className="modal-overlay">
           <div className="report-modal">
-            <h2>Procurement Report</h2>
+            <h2>Subsystem Report</h2>
 
-            <p>Total: {suppliers.length}</p>
-            <p>Active: {suppliers.filter(s => s.status === "Active").length}</p>
-            <p>At Risk: {suppliers.filter(s => s.status === "At Risk").length}</p>
+            <p>Total Orders: {orders.length}</p>
+            <p>
+              Total Recommendations: {recommendations.length}
+            </p>
+            <p>
+              High Priority Recommendations:{" "}
+              {highPriorityCount}
+            </p>
+            <p>Delivered Orders: {deliveredCount}</p>
+            <p>In Transit Orders: {inTransitCount}</p>
+            <p>Delayed Deliveries: {delayedCount}</p>
 
-            <h4>JSON</h4>
-            <pre>{JSON.stringify(suppliers, null, 2)}</pre>
+            <h4>Recommendation Data</h4>
 
-            <div className="modal-buttons">
-              <button className="close-btn" onClick={() => setShowReport(false)}>
-                Close
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* VIEW */}
-      {view && (
-        <div className="modal-overlay">
-          <div className="report-modal">
-            <h2>Supplier</h2>
-
-            <p><b>Name:</b> {view.name}</p>
-            <p><b>Contact:</b> {view.contact}</p>
-            <p><b>Location:</b> {view.location}</p>
-            <p><b>Performance:</b> {view.performance}%</p>
-            <p><b>Status:</b> {view.status}</p>
-
-            <div className="modal-buttons">
-              <button className="close-btn" onClick={() => setView(null)}>
-                Close
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* DELETE */}
-      {deleteItem && (
-        <div className="modal-overlay">
-          <div className="report-modal">
-            <h2>Delete Supplier?</h2>
-
-            <p>{deleteItem.name}</p>
+            <pre>
+              {JSON.stringify(recommendations, null, 2)}
+            </pre>
 
             <div className="modal-buttons">
               <button
-                className="save-btn"
-                onClick={() => {
-                  setSuppliers(suppliers.filter(s => s !== deleteItem));
-                  setDeleteItem(null);
-                }}
+                className="close-btn"
+                onClick={() => setShowReport(false)}
               >
-                Yes
-              </button>
-
-              <button className="close-btn" onClick={() => setDeleteItem(null)}>
-                Cancel
+                Close
               </button>
             </div>
           </div>
         </div>
       )}
 
+      {/* VIEW MODAL */}
+      {view && (
+        <div className="modal-overlay">
+          <div className="report-modal">
+            <h2>Stock Recommendation</h2>
+
+            <p>
+              <b>Item:</b> {view.item}
+            </p>
+
+            <p>
+              <b>Category:</b> {view.category}
+            </p>
+
+            <p>
+              <b>Recommended Stock:</b>{" "}
+              {view.recommendedStock}
+            </p>
+
+            <p>
+              <b>Reason:</b>{" "}
+              {view.reason || "No reason provided"}
+            </p>
+
+            <p>
+              <b>Generated By:</b>{" "}
+              {view.generatedBy ||
+                "Demand Forecasting Subsystem"}
+            </p>
+
+            <div className="modal-buttons">
+              <button
+                className="close-btn"
+                onClick={() => setView(null)}
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

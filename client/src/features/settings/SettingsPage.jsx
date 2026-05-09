@@ -1,328 +1,573 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import axios from "axios";
 import "../../styles/settings.css";
 
 const SettingsPage = () => {
-  const [users, setUsers] = useState([
-    { name: "Admin User", role: "Administrator", status: "Active" },
-    { name: "Jessica Lee", role: "Manager", status: "Active" },
-    { name: "Tom Harris", role: "Analyst", status: "Inactive" },
-    { name: "Kevin Wong", role: "Viewer", status: "Active" },
-  ]);
-
-  const auditLogs = [
-    ["2024-04-15", "Admin User", "Modified User Permissions"],
-    ["2024-04-14", "Jessica Lee", "Updated Supplier Record"],
-    ["2024-04-13", "Kevin Wong", "Login Successful"],
-    ["2024-04-12", "Tom Harris", "Added New Order"],
-    ["2024-04-11", "Admin User", "Security Settings Changed"],
-  ];
-
-  const alerts = [
-    { id: 1, type: "Suspicious Payment", supplier: "ABC Supplies", amount: "$12,500", status: "Pending Review" },
-    { id: 2, type: "Failed Transactions", supplier: "Global Traders", amount: "$8,200", status: "Investigating" },
-  ];
-
-  const [page, setPage] = useState(1);
-  const logsPerPage = 3;
-
+  const [users, setUsers] = useState([]);
   const [modal, setModal] = useState(null);
-  const [editIndex, setEditIndex] = useState(null);
+  const [selectedUser, setSelectedUser] = useState(null);
 
-  const [twoFactorEnabled, setTwoFactorEnabled] = useState(false);
-
-  const [form, setForm] = useState({ name: "", role: "", status: "Active" });
-
-  const [passwordForm, setPasswordForm] = useState({
-    currentPassword: "",
-    newPassword: "",
-    confirmPassword: "",
+  const [form, setForm] = useState({
+    name: "",
+    email: "",
+    password: "",
+    role: "Staff",
+    status: "Active",
   });
 
-  const openAddModal = () => {
-    setForm({ name: "", role: "", status: "Active" });
-    setEditIndex(null);
-    setModal("user");
-  };
+  const API_URL =
+    import.meta.env.VITE_API_URL || "http://localhost:5000";
 
-  const saveUser = () => {
-    if (!form.name || !form.role) return;
+  useEffect(() => {
+    fetchUsers();
+  }, []);
 
-    if (editIndex !== null) {
-      const updated = [...users];
-      updated[editIndex] = form;
-      setUsers(updated);
-    } else {
-      setUsers([...users, form]);
+  const fetchUsers = async () => {
+    try {
+      const token = localStorage.getItem("token");
+
+      const res = await axios.get(`${API_URL}/api/users`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      setUsers(res.data.data || []);
+    } catch (err) {
+      console.error("Fetch users error:", err);
     }
-
-    setModal(null);
   };
 
-  const updatePassword = () => {
-    if (
-      !passwordForm.currentPassword ||
-      !passwordForm.newPassword ||
-      passwordForm.newPassword !== passwordForm.confirmPassword
-    ) {
-      alert("Check password fields.");
+  const openAddUser = () => {
+    setForm({
+      name: "",
+      email: "",
+      password: "",
+      role: "Staff",
+      status: "Active",
+    });
+
+    setModal("addUser");
+  };
+
+  const openEditUser = (user) => {
+    setSelectedUser(user);
+
+    setForm({
+      name: user.name || "",
+      email: user.email || "",
+      password: "",
+      role: user.role || "Staff",
+      status: user.status || "Active",
+    });
+
+    setModal("editUser");
+  };
+
+  const openDeleteUser = (user) => {
+    setSelectedUser(user);
+    setModal("deleteUser");
+  };
+
+  const saveUser = async () => {
+    if (!form.name || !form.email || !form.password || !form.role) {
+      alert("Please fill in name, email, password, and role.");
       return;
     }
 
-    alert("Password updated!");
-    setModal(null);
-    setPasswordForm({ currentPassword: "", newPassword: "", confirmPassword: "" });
+    try {
+      const token = localStorage.getItem("token");
+
+      await axios.post(`${API_URL}/api/users`, form, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      await fetchUsers();
+      setModal(null);
+    } catch (err) {
+      alert(err.response?.data?.message || "Failed to create user");
+    }
   };
 
-  const toggleTwoFactor = () => setTwoFactorEnabled(!twoFactorEnabled);
+  const updateUser = async () => {
+    if (!form.name || !form.email || !form.role) {
+      alert("Please fill in name, email, and role.");
+      return;
+    }
 
-  const logsStart = (page - 1) * logsPerPage;
-  const paginatedLogs = auditLogs.slice(logsStart, logsStart + logsPerPage);
-  const totalPages = Math.ceil(auditLogs.length / logsPerPage);
+    try {
+      const token = localStorage.getItem("token");
+
+      await axios.put(
+        `${API_URL}/api/users/${selectedUser._id}`,
+        {
+          name: form.name,
+          email: form.email,
+          role: form.role,
+          status: form.status,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      await fetchUsers();
+
+      setModal(null);
+      setSelectedUser(null);
+    } catch (err) {
+      alert(err.response?.data?.message || "Failed to update user");
+    }
+  };
+
+  const deleteUser = async () => {
+    try {
+      const token = localStorage.getItem("token");
+
+      await axios.delete(
+        `${API_URL}/api/users/${selectedUser._id}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      await fetchUsers();
+
+      setModal(null);
+      setSelectedUser(null);
+    } catch (err) {
+      alert(err.response?.data?.message || "Failed to delete user");
+    }
+  };
 
   return (
     <div className="settings-page">
-
-      {/* TOP */}
-      <div className="settings-top">
-        <button className="add-user-btn" onClick={openAddModal}>
-          Add User
-        </button>
-      </div>
-
       <div className="settings-grid">
-
-        {/* USERS */}
+        {/* USER MANAGEMENT */}
         <div className="settings-card">
-          <div className="settings-card-title">User Management</div>
+          <div className="settings-card-header">
+            <div className="settings-card-title">
+              User Management
+            </div>
 
-          <table className="settings-table">
-            <thead>
-              <tr>
-                <th>Name</th>
-                <th>Role</th>
-                <th>Status</th>
-              </tr>
-            </thead>
-
-            <tbody>
-              {users.map((u, i) => (
-                <tr key={i}>
-                  <td>{u.name}</td>
-                  <td>{u.role}</td>
-                  <td>
-                    <span className={`user-status ${u.status.toLowerCase()}`}>
-                      {u.status}
-                    </span>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-
-        {/* SECURITY */}
-        <div className="settings-card">
-          <h3>Security Settings</h3>
-
-          <div className="settings-row">
-            <span>Change Password</span>
-            <button className="mini-btn" onClick={() => setModal("password")}>Update</button>
+            <button
+              className="add-user-btn inside-card"
+              onClick={openAddUser}
+            >
+              Add User
+            </button>
           </div>
 
-          <div className="settings-row">
-            <span>Two-Factor Authentication</span>
-            <button className="mini-btn" onClick={() => setModal("2fa")}>Update</button>
-          </div>
-
-          <div className="settings-row">
-            <span>Access Logs</span>
-            <button className="mini-btn" onClick={() => setModal("logs")}>View</button>
-          </div>
-        </div>
-
-        {/* FRAUD */}
-        <div className="settings-card">
-          <h3>Fraud Detection</h3>
-
-          <div className="fraud-row">
-            Suspicious Transactions: <span className="warning-text">2 Alerts</span>
-          </div>
-
-          <div className="fraud-row">
-            High Value Monitoring: <span className="success-text">Enabled</span>
-          </div>
-
-          <div className="fraud-row">
-            Fraud Alerts: <span className="success-text">Active</span>
-          </div>
-
-          <button className="view-alerts-btn" onClick={() => setModal("alerts")}>
-            View Alerts
-          </button>
-        </div>
-
-        {/* ✅ FIXED AUDIT */}
-        <div className="settings-card audit-card">
-          <h3>Audit Logs</h3>
-
-          <div className="audit-table-wrapper">
-            <table className="audit-table">
+          <div className="settings-table-wrapper">
+            <table className="settings-table">
               <thead>
                 <tr>
-                  <th>Date</th>
-                  <th>User</th>
-                  <th>Action</th>
+                  <th>Name</th>
+                  <th>Email</th>
+                  <th>Role</th>
+                  <th>Status</th>
+                  <th>Actions</th>
                 </tr>
               </thead>
 
               <tbody>
-                {paginatedLogs.map((log, i) => (
-                  <tr key={i}>
-                    <td>{log[0]}</td>
-                    <td>{log[1]}</td>
-                    <td>{log[2]}</td>
+                {users.length > 0 ? (
+                  users.map((u) => (
+                    <tr key={u._id}>
+                      <td>{u.name || "No Name"}</td>
+                      <td>{u.email}</td>
+                      <td>{u.role}</td>
+
+                      <td>
+                        <span
+                          className={`user-status ${String(
+                            u.status || "Active"
+                          ).toLowerCase()}`}
+                        >
+                          {u.status || "Active"}
+                        </span>
+                      </td>
+
+                      <td>
+                        <div className="settings-actions-cell">
+                          <button
+                            className="mini-btn"
+                            onClick={() => openEditUser(u)}
+                          >
+                            Edit
+                          </button>
+
+                          <button
+                            className="mini-btn danger-btn"
+                            onClick={() => openDeleteUser(u)}
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan="5" className="empty-cell">
+                      No users found
+                    </td>
                   </tr>
-                ))}
+                )}
               </tbody>
             </table>
           </div>
+        </div>
 
-          <div className="pagination">
-            {Array.from({ length: totalPages }, (_, i) => (
-              <button
-                key={i}
-                onClick={() => setPage(i + 1)}
-                className={page === i + 1 ? "active-page" : ""}
-              >
-                {i + 1}
-              </button>
-            ))}
+        {/* SECURITY SETTINGS */}
+        <div className="settings-card">
+          <h3>Security Settings</h3>
+
+          <div className="settings-row">
+            <span>Password Policy</span>
+
+            <button
+              className="mini-btn"
+              onClick={() => setModal("passwordPolicy")}
+            >
+              Update
+            </button>
           </div>
+
+          <div className="settings-row">
+            <span>Two-Factor Authentication</span>
+
+            <button
+              className="mini-btn"
+              onClick={() => setModal("twoFactor")}
+            >
+              Configure
+            </button>
+          </div>
+
+          <div className="settings-row">
+            <span>Guardian Security Engine</span>
+
+            <button
+              className="mini-btn"
+              onClick={() => setModal("guardianEngine")}
+            >
+              Active
+            </button>
+          </div>
+
+          <div className="settings-row">
+            <span>System Access Logs</span>
+
+            <button
+              className="mini-btn"
+              onClick={() => setModal("accessLogs")}
+            >
+              View
+            </button>
+          </div>
+        </div>
+
+        {/* AUDIT LOGS */}
+        <div className="settings-card audit-card">
+          <div className="settings-card-title">
+            Audit Logs
+          </div>
+
+          <table className="audit-table">
+            <thead>
+              <tr>
+                <th>User</th>
+                <th>Action</th>
+                <th>Date</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              <tr>
+                <td>Admin</td>
+                <td>Created Order</td>
+                <td>Today</td>
+              </tr>
+
+              <tr>
+                <td>Manager</td>
+                <td>Updated Delivery</td>
+                <td>Today</td>
+              </tr>
+
+              <tr>
+                <td>Staff</td>
+                <td>Generated Report</td>
+                <td>Today</td>
+              </tr>
+
+              <tr>
+                <td>Admin</td>
+                <td>Added User</td>
+                <td>Today</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        {/* GUARDIAN */}
+        <div className="settings-card">
+          <div className="settings-card-title">
+            Guardian Fraud Monitoring
+          </div>
+
+          <div className="fraud-row">
+            Suspicious Orders:
+            <span className="warning-text">
+              2 flagged
+            </span>
+          </div>
+
+          <div className="fraud-row">
+            Blocked Transactions:
+            <span className="success-text">
+              5 blocked
+            </span>
+          </div>
+
+          <button
+            className="view-alerts-btn"
+            onClick={() => setModal("fraudAlerts")}
+          >
+            View Alerts
+          </button>
         </div>
       </div>
 
-      {/* ===== MODALS (unchanged) ===== */}
-
-      {modal === "user" && (
+      {/* ADD / EDIT USER */}
+      {(modal === "addUser" || modal === "editUser") && (
         <div className="modal-overlay">
           <div className="report-modal">
-            <h3>Add User</h3>
+            <h3>
+              {modal === "addUser"
+                ? "Add User"
+                : "Edit User"}
+            </h3>
 
-            <input className="search-input" placeholder="Name"
+            <input
+              className="search-input"
+              placeholder="Name"
               value={form.name}
-              onChange={(e) => setForm({ ...form, name: e.target.value })}
+              onChange={(e) =>
+                setForm({
+                  ...form,
+                  name: e.target.value,
+                })
+              }
             />
 
-            <input className="search-input" placeholder="Role"
+            <input
+              className="search-input"
+              placeholder="Email"
+              value={form.email}
+              onChange={(e) =>
+                setForm({
+                  ...form,
+                  email: e.target.value,
+                })
+              }
+            />
+
+            {modal === "addUser" && (
+              <input
+                type="password"
+                className="search-input"
+                placeholder="Password"
+                value={form.password}
+                onChange={(e) =>
+                  setForm({
+                    ...form,
+                    password: e.target.value,
+                  })
+                }
+              />
+            )}
+
+            <select
+              className="filter-select"
               value={form.role}
-              onChange={(e) => setForm({ ...form, role: e.target.value })}
-            />
-
-            <select className="filter-select"
-              value={form.status}
-              onChange={(e) => setForm({ ...form, status: e.target.value })}
+              onChange={(e) =>
+                setForm({
+                  ...form,
+                  role: e.target.value,
+                })
+              }
             >
-              <option>Active</option>
-              <option>Inactive</option>
+              <option value="Admin">Admin</option>
+              <option value="Manager">Manager</option>
+              <option value="Staff">Staff</option>
+            </select>
+
+            <select
+              className="filter-select"
+              value={form.status}
+              onChange={(e) =>
+                setForm({
+                  ...form,
+                  status: e.target.value,
+                })
+              }
+            >
+              <option value="Active">Active</option>
+              <option value="Inactive">Inactive</option>
             </select>
 
             <div className="modal-buttons">
-              <button className="save-btn" onClick={saveUser}>Save</button>
-              <button className="close-btn" onClick={() => setModal(null)}>Close</button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {modal === "password" && (
-        <div className="modal-overlay">
-          <div className="report-modal">
-            <h3>Change Password</h3>
-
-            <input type="password" className="search-input" placeholder="Current"
-              value={passwordForm.currentPassword}
-              onChange={(e) => setPasswordForm({ ...passwordForm, currentPassword: e.target.value })}
-            />
-
-            <input type="password" className="search-input" placeholder="New"
-              value={passwordForm.newPassword}
-              onChange={(e) => setPasswordForm({ ...passwordForm, newPassword: e.target.value })}
-            />
-
-            <input type="password" className="search-input" placeholder="Confirm"
-              value={passwordForm.confirmPassword}
-              onChange={(e) => setPasswordForm({ ...passwordForm, confirmPassword: e.target.value })}
-            />
-
-            <div className="modal-buttons">
-              <button className="save-btn" onClick={updatePassword}>Update</button>
-              <button className="close-btn" onClick={() => setModal(null)}>Close</button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {modal === "2fa" && (
-        <div className="modal-overlay">
-          <div className="report-modal">
-            <h3>Two-Factor Authentication</h3>
-
-            <p>Status: <b>{twoFactorEnabled ? "Enabled" : "Disabled"}</b></p>
-
-            <div className="modal-buttons">
-              <button className="save-btn" onClick={toggleTwoFactor}>
-                {twoFactorEnabled ? "Disable" : "Enable"}
+              <button
+                className="save-btn"
+                onClick={
+                  modal === "addUser"
+                    ? saveUser
+                    : updateUser
+                }
+              >
+                Save
               </button>
-              <button className="close-btn" onClick={() => setModal(null)}>Close</button>
+
+              <button
+                className="close-btn"
+                onClick={() => setModal(null)}
+              >
+                Close
+              </button>
             </div>
           </div>
         </div>
       )}
 
-      {modal === "alerts" && (
+      {/* DELETE USER */}
+      {modal === "deleteUser" && selectedUser && (
         <div className="modal-overlay">
           <div className="report-modal">
-            <h3>Fraud Alerts</h3>
+            <h3>Delete User</h3>
 
-            {alerts.map(a => (
-              <div key={a.id} style={{ background: "#2e2e2e", padding: 10, marginBottom: 10 }}>
-                <p>{a.type}</p>
-                <p>{a.supplier}</p>
-                <p>{a.amount}</p>
-                <p>{a.status}</p>
-              </div>
-            ))}
+            <p>
+              Are you sure you want to delete{" "}
+              <b>
+                {selectedUser.name ||
+                  selectedUser.email}
+              </b>
+              ?
+            </p>
 
             <div className="modal-buttons">
-              <button className="close-btn" onClick={() => setModal(null)}>Close</button>
+              <button
+                className="save-btn danger-btn"
+                onClick={deleteUser}
+              >
+                Delete
+              </button>
+
+              <button
+                className="close-btn"
+                onClick={() => setModal(null)}
+              >
+                Cancel
+              </button>
             </div>
           </div>
         </div>
       )}
 
-      {modal === "logs" && (
-        <div className="modal-overlay">
-          <div className="report-modal">
-            <h3>Access Logs</h3>
-
-            <table className="audit-table">
-              <tbody>
-                {auditLogs.map((l, i) => (
-                  <tr key={i}>
-                    <td>{l[0]}</td>
-                    <td>{l[1]}</td>
-                    <td>{l[2]}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-
-            <div className="modal-buttons">
-              <button className="close-btn" onClick={() => setModal(null)}>Close</button>
-            </div>
-          </div>
-        </div>
+      {/* MODALS */}
+      {modal === "passwordPolicy" && (
+        <SimpleModal
+          title="Password Policy"
+          onClose={() => setModal(null)}
+        >
+          <p>Minimum 8 characters recommended.</p>
+          <p>
+            Password should include letters and numbers.
+          </p>
+        </SimpleModal>
       )}
+
+      {modal === "twoFactor" && (
+        <SimpleModal
+          title="Two-Factor Authentication"
+          onClose={() => setModal(null)}
+        >
+          <p>Status: Disabled</p>
+          <p>
+            2FA configuration can be connected later.
+          </p>
+        </SimpleModal>
+      )}
+
+      {modal === "guardianEngine" && (
+        <SimpleModal
+          title="Guardian Security Engine"
+          onClose={() => setModal(null)}
+        >
+          <p>Status: Active</p>
+          <p>
+            Guardian is checking risky order
+            transactions.
+          </p>
+        </SimpleModal>
+      )}
+
+      {modal === "accessLogs" && (
+        <SimpleModal
+          title="System Access Logs"
+          onClose={() => setModal(null)}
+        >
+          <p>Admin logged in today.</p>
+          <p>User management module accessed.</p>
+          <p>Settings page viewed.</p>
+        </SimpleModal>
+      )}
+
+      {modal === "fraudAlerts" && (
+        <SimpleModal
+          title="Guardian Fraud Alerts"
+          onClose={() => setModal(null)}
+        >
+          <p>Suspicious Orders: 2 flagged</p>
+          <p>Blocked Transactions: 5 blocked</p>
+          <p>
+            High quantity orders are monitored by
+            Guardian.
+          </p>
+        </SimpleModal>
+      )}
+    </div>
+  );
+};
+
+const SimpleModal = ({
+  title,
+  children,
+  onClose,
+}) => {
+  return (
+    <div className="modal-overlay">
+      <div className="report-modal">
+        <h3>{title}</h3>
+
+        {children}
+
+        <div className="modal-buttons">
+          <button
+            className="close-btn"
+            onClick={onClose}
+          >
+            Close
+          </button>
+        </div>
+      </div>
     </div>
   );
 };

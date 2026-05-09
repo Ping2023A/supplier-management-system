@@ -1,149 +1,171 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
-import StatCard from "../../components/common/StatCard";
 import "../../styles/dashboard.css";
 
-// Chart.js imports
-import { Bar, Pie } from "react-chartjs-2";
-import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  BarElement,
-  ArcElement,
-  Title,
-  Tooltip,
-  Legend,
-} from "chart.js";
-
-// Register Chart.js components once
-ChartJS.register(CategoryScale, LinearScale, BarElement, ArcElement, Title, Tooltip, Legend);
-
 const DashboardPage = () => {
-  const [overview, setOverview] = useState(null);
-  const [performanceData, setPerformanceData] = useState(null);
-  const [orderStatusData, setOrderStatusData] = useState(null);
-  const [alerts, setAlerts] = useState(null);
+  const [orders, setOrders] = useState([]);
+  const [deliveries, setDeliveries] = useState([]);
+  const [recommendations, setRecommendations] = useState([]);
+
+  const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchDashboardData = async () => {
       try {
         const token = localStorage.getItem("token");
-        const [overviewRes, perfRes, alertsRes] = await Promise.all([
-          axios.get("http://localhost:5000/api/dashboard/overview", {
-            headers: { Authorization: `Bearer ${token}` },
-          }),
-          axios.get("http://localhost:5000/api/dashboard/performance", {
-            headers: { Authorization: `Bearer ${token}` },
-          }),
-          axios.get("http://localhost:5000/api/dashboard/alerts", {
-            headers: { Authorization: `Bearer ${token}` },
-          }),
-        ]);
 
-        setOverview(overviewRes.data);
+        const [ordersRes, deliveriesRes, recommendationsRes] =
+          await Promise.all([
+            axios.get(`${API_URL}/api/orders`, {
+              headers: { Authorization: `Bearer ${token}` },
+            }),
+            axios.get(`${API_URL}/api/integration/logistics/delivery-status`),
+            axios.get(`${API_URL}/api/integration/forecasting/recommendations`),
+          ]);
 
-        // ✅ Transform performance API response into Chart.js format
-        setPerformanceData({
-          labels: perfRes.data.labels || [],
-          datasets: [
-            {
-              label: "Supplier Performance",
-              data: perfRes.data.values || [],
-              backgroundColor: "rgba(54, 162, 235, 0.6)",
-            },
-          ],
-        });
-
-        // ✅ Build order status chart data from overview
-        setOrderStatusData({
-          labels: ["Pending", "Processing", "Completed", "Cancelled"],
-          datasets: [
-            {
-              data: [
-                overviewRes.data.pendingOrders || 0,
-                overviewRes.data.processingOrders || 0,
-                overviewRes.data.completedOrders || 0,
-                overviewRes.data.cancelledOrders || 0,
-              ],
-              backgroundColor: [
-                "rgba(255, 206, 86, 0.6)",   // Pending
-                "rgba(54, 162, 235, 0.6)",   // Processing
-                "rgba(75, 192, 192, 0.6)",   // Completed
-                "rgba(255, 99, 132, 0.6)",   // Cancelled
-              ],
-            },
-          ],
-        });
-
-        setAlerts(alertsRes.data);
+        setOrders(ordersRes.data.data || []);
+        setDeliveries(deliveriesRes.data.data || []);
+        setRecommendations(recommendationsRes.data.data || []);
       } catch (err) {
         console.error("Dashboard fetch error:", err);
       }
     };
 
-    fetchData();
-  }, []);
+    fetchDashboardData();
+  }, [API_URL]);
 
-  if (!overview || !alerts || !performanceData || !orderStatusData) {
-    return <p>Loading dashboard...</p>;
-  }
+  const totalOrders = orders.length;
+  const pendingOrders = orders.filter((o) => o.status === "Pending").length;
+  const inTransitDeliveries = deliveries.filter(
+    (d) => d.status === "In Transit"
+  ).length;
+  const stockRecommendations = recommendations.length;
+  const delayedDeliveries = deliveries.filter((d) => d.status === "Delayed").length;
+  const highPriorityRecommendations = recommendations.filter(
+    (r) => Number(r.recommendedStock) >= 50
+  ).length;
+
+  const recentOrders = orders.slice(0, 5);
+  const deliveryUpdates = deliveries.slice(0, 5);
+  const stockAlerts = recommendations.slice(0, 5);
 
   return (
     <div className="dashboard">
-      <h2>Dashboard</h2>
-
-      {/* Stat Cards */}
       <div className="stats">
-        <StatCard title="Total Suppliers" value={overview.suppliers} />
-        <StatCard title="Pending Orders" value={overview.pendingOrders} />
-        <StatCard title="Deliveries in Transit" value={overview.deliveriesInTransit} />
-        <StatCard title="Low Stock Alert" value={overview.lowStock} />
+        <div className="stat-card">Total Orders: {totalOrders}</div>
+        <div className="stat-card">Pending Orders: {pendingOrders}</div>
+        <div className="stat-card">
+          Deliveries in Transit: {inTransitDeliveries}
+        </div>
+        <div className="stat-card">
+          Stock Recommendations: {stockRecommendations}
+        </div>
       </div>
 
-      {/* Charts */}
       <div className="grid">
         <div className="card">
-          <h3>Supplier Performance</h3>
-          <Bar data={performanceData} />
+          <h3>Operational Summary</h3>
+
+          <div className="summary-list">
+            <div className="summary-row">
+              <span>Total Orders</span>
+              <b>{totalOrders}</b>
+            </div>
+
+            <div className="summary-row">
+              <span>Pending Orders</span>
+              <b>{pendingOrders}</b>
+            </div>
+
+            <div className="summary-row">
+              <span>In Transit Deliveries</span>
+              <b>{inTransitDeliveries}</b>
+            </div>
+
+            <div className="summary-row">
+              <span>Delayed Deliveries</span>
+              <b>{delayedDeliveries}</b>
+            </div>
+          </div>
         </div>
 
         <div className="card">
-          <h3>Order Status Overview</h3>
-          <Pie data={orderStatusData} />
+          <h3>Demand Forecasting Summary</h3>
+
+          <div className="summary-list">
+            <div className="summary-row">
+              <span>Total Recommendations</span>
+              <b>{stockRecommendations}</b>
+            </div>
+
+            <div className="summary-row">
+              <span>High Priority Restocks</span>
+              <b>{highPriorityRecommendations}</b>
+            </div>
+
+            <div className="summary-row">
+              <span>Latest Recommended Item</span>
+              <b>{recommendations[0]?.item || "N/A"}</b>
+            </div>
+
+            <div className="summary-row">
+              <span>Generated By</span>
+              <b>{recommendations[0]?.generatedBy || "Forecasting"}</b>
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* Alerts */}
       <div className="bottom-grid">
         <div className="small-card">
           <h3>Recent Orders</h3>
-          {alerts.recentOrders?.map((o) => (
-            <div className="table-row" key={o._id}>
-              <span>{o.orderNumber}</span>
-              <span>{o.supplier}</span>
-            </div>
-          ))}
+
+          <div className="small-card-scroll">
+            {recentOrders.length > 0 ? (
+              recentOrders.map((o) => (
+                <div className="table-row" key={o._id || o.id}>
+                  <span>{o.id}</span>
+                  <span>{o.status}</span>
+                </div>
+              ))
+            ) : (
+              <p className="empty-text">No recent orders</p>
+            )}
+          </div>
         </div>
 
         <div className="small-card">
           <h3>Delivery Updates</h3>
-          {alerts.deliveryUpdates?.map((d) => (
-            <div className="table-row" key={d._id}>
-              <span>{d.shipmentNumber}</span>
-              <span>{d.status}</span>
-            </div>
-          ))}
+
+          <div className="small-card-scroll">
+            {deliveryUpdates.length > 0 ? (
+              deliveryUpdates.map((d) => (
+                <div className="table-row" key={d._id || d.orderId}>
+                  <span>{d.orderId}</span>
+                  <span>{d.status}</span>
+                </div>
+              ))
+            ) : (
+              <p className="empty-text">No delivery updates</p>
+            )}
+          </div>
         </div>
 
         <div className="small-card">
-          <h3>Stock Alerts</h3>
-          {alerts.stockAlerts?.map((s) => (
-            <div className="table-row" key={s._id}>
-              <span>{s.name}</span>
-              <span>{s.quantity < 5 ? "Critical" : "Low Stock"}</span>
-            </div>
-          ))}
+          <h3>Stock Recommendations</h3>
+
+          <div className="small-card-scroll">
+            {stockAlerts.length > 0 ? (
+              stockAlerts.map((s) => (
+                <div className="table-row" key={s._id}>
+                  <span>{s.item}</span>
+                  <span>{s.recommendedStock}</span>
+                </div>
+              ))
+            ) : (
+              <p className="empty-text">No stock recommendations</p>
+            )}
+          </div>
         </div>
       </div>
     </div>

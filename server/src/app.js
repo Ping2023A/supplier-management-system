@@ -1,7 +1,7 @@
 const express = require("express");
 const cors = require("cors");
 
-// Import routes
+// IMPORT ROUTES
 const supplierRoutes = require("./routes/supplierRoutes");
 const orderRoutes = require("./routes/orderRoutes");
 const deliveryRoutes = require("./routes/deliveryRoutes");
@@ -9,34 +9,50 @@ const dashboardRoutes = require("./routes/dashboardRoutes");
 const reportRoutes = require("./routes/reportRoutes");
 const settingsRoutes = require("./routes/settingsRoutes");
 const authRoutes = require("./routes/authRoutes");
+const integrationRoutes = require("./routes/integrationRoutes");
+const userRoutes = require("./routes/userRoutes");
 
-// Import middleware
+// IMPORT MIDDLEWARE
 const errorHandler = require("./middlewares/errorMiddleware");
 const auth = require("./middlewares/authMiddleware");
 
 const app = express();
 
-// Global middleware
+// GLOBAL MIDDLEWARE
 app.use(cors());
 app.use(express.json());
 
-// Public routes
+// ================= PUBLIC ROUTES =================
+
 app.use("/api/auth", authRoutes);
 
-// Protected routes (secured with auth middleware)
+app.use("/api/users", userRoutes);
+
+// ================= PROTECTED ROUTES =================
+
 app.use("/api/suppliers", auth, supplierRoutes);
+
 app.use("/api/orders", auth, orderRoutes);
+
 app.use("/api/deliveries", auth, deliveryRoutes);
+
 app.use("/api/dashboard", auth, dashboardRoutes);
+
 app.use("/api/reports", auth, reportRoutes);
+
 app.use("/api/settings", auth, settingsRoutes);
 
-// Health check route
+// INTEGRATION ROUTES
+app.use("/api/integration", integrationRoutes);
+
+// ================= HEALTH CHECK =================
+
 app.get("/", (req, res) => {
   res.send("✅ API is running...");
 });
 
-// Error handling middleware (must be last)
+// ================= ERROR HANDLER =================
+
 app.use(errorHandler);
 
 module.exports = app;

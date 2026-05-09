@@ -110,41 +110,40 @@ body {
   overflow-y: auto;
 }
 
+/* ================= DASHBOARD ================= */
+
 .dashboard {
   width: 100%;
   height: 100%;
+  color: white;
+  overflow: auto;
 }
 
 .dashboard h2 {
   display: none;
 }
 
+/* ================= SUMMARY BOXES ================= */
+
 .stats {
-  height: 75px;
+  height: 95px;
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 20px;
 }
 
 .stat-card {
-  height: 75px;
-  padding: 12px;
+  height: 95px;
+  padding: 18px 18px;
   border-radius: 6px;
   color: white;
-  min-width: 0;
-}
 
-.stat-card h4 {
-  margin: 0;
-  font-size: 15px;
-  font-weight: 800;
-}
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-start;
 
-.stat-card h2 {
-  margin: 8px 0 0;
-  font-size: 27px;
+  font-size: 16px;
   font-weight: 900;
-  color: white;
 }
 
 .stat-card:nth-child(1) {
@@ -163,8 +162,10 @@ body {
   background: #6d1f1f;
 }
 
+/* ================= TOP GRID ================= */
+
 .grid {
-  height: 245px;
+  height: 305px;
   margin-top: 18px;
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -173,43 +174,107 @@ body {
 
 .card {
   background: #20201f;
-  height: 245px;
-  padding: 16px;
+  height: 305px;
+  padding: 18px;
   border-radius: 6px;
   overflow: hidden;
 }
 
 .card h3,
 .small-card h3 {
-  margin: 0 0 12px;
-  font-size: 14px;
-  font-weight: 800;
+  margin: 0 0 18px;
+  font-size: 16px;
+  font-weight: 900;
   border-bottom: 1px solid #777;
-  padding-bottom: 8px;
+  padding-bottom: 10px;
 }
 
+/* ================= SUMMARY LIST ================= */
+
+.summary-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.summary-row {
+  height: 50px;
+  border-bottom: 1px solid #555;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.summary-row b {
+  color: #15c957;
+  font-size: 15px;
+}
+
+/* ================= BOTTOM GRID ================= */
+
 .bottom-grid {
-  height: 155px;
-  margin-top: 12px;
+  height: 230px;
+  margin-top: 16px;
+
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 14px;
+  gap: 16px;
 }
 
 .small-card {
   background: #20201f;
-  height: 155px;
-  padding: 12px;
+  height: 230px;
+  padding: 14px;
   border-radius: 6px;
   overflow: hidden;
 }
+
+/* ================= SCROLLABLE AREA ================= */
+
+.small-card-scroll {
+  height: 150px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+/* CUSTOM SCROLLBAR */
+
+.small-card-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+
+.small-card-scroll::-webkit-scrollbar-track {
+  background: #1f1f1f;
+}
+
+.small-card-scroll::-webkit-scrollbar-thumb {
+  background: #555;
+  border-radius: 10px;
+}
+
+.small-card-scroll::-webkit-scrollbar-thumb:hover {
+  background: #777;
+}
+
+/* ================= TABLE ROWS ================= */
 
 .table-row {
   display: flex;
   justify-content: space-between;
   gap: 10px;
+
   border-bottom: 1px solid #555;
-  padding: 8px 0;
+
+  padding: 12px 0;
+
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.empty-text {
+  margin-top: 10px;
   font-size: 12px;
-  font-weight: 700;
+  color: #bbb;
 }
