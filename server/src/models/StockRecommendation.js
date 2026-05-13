@@ -4,24 +4,24 @@ const stockRecommendationSchema = new mongoose.Schema(
   {
     item: {
       type: String,
-      required: true
+      required: true,
     },
     category: {
       type: String,
-      required: true
+      required: true,
     },
     recommendedStock: {
       type: Number,
-      required: true
+      required: true,
     },
     reason: {
       type: String,
-      default: ""
+      default: "",
     },
     generatedBy: {
       type: String,
-      default: "Demand Forecasting Subsystem"
-    }
+      default: "Demand Forecasting Subsystem",
+    },
   },
   { timestamps: true }
 );

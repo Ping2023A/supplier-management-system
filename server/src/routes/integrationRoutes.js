@@ -1,8 +1,14 @@
 const express = require("express");
 const router = express.Router();
+const axios = require("axios");
+
 const Order = require("../models/Order");
 const DeliveryStatus = require("../models/DeliveryStatus");
 const StockRecommendation = require("../models/StockRecommendation");
+
+// ===============================
+// INVENTORY SUBSYSTEM
+// ===============================
 
 // Inventory subsystem can fetch supplier orders
 router.get("/inventory/orders", async (req, res) => {
@@ -23,6 +29,10 @@ router.get("/inventory/orders", async (req, res) => {
   }
 });
 
+// ===============================
+// LOGISTICS SUBSYSTEM
+// ===============================
+
 // Logistics subsystem can fetch all orders with delivery status
 router.get("/logistics/delivery-status", async (req, res) => {
   try {
@@ -36,20 +46,23 @@ router.get("/logistics/delivery-status", async (req, res) => {
 
       return {
         orderId: order.id,
-        shipmentId: delivery?.trackingNumber || `Shipment-${order.id}`,
+        shipmentId:
+          delivery?.trackingNumber || `Shipment-${order.id}`,
         supplier: order.supplier,
         item: order.item,
         qty: order.qty,
         category: order.category,
-        status: delivery?.status || "Pending",
+        status: delivery?.status || order.status || "Pending",
         trackingNumber: delivery?.trackingNumber || "",
-        estimatedArrival: delivery?.estimatedArrival || order.deliveryDate,
+        estimatedArrival:
+          delivery?.estimatedArrival || order.deliveryDate,
       };
     });
 
     res.status(200).json({
       success: true,
-      message: "Orders and delivery statuses fetched successfully",
+      message:
+        "Orders and delivery statuses fetched successfully",
       data: deliveries,
     });
   } catch (error) {
@@ -67,6 +80,20 @@ router.put("/logistics/delivery-status/:orderId", async (req, res) => {
     const { orderId } = req.params;
     const { status, trackingNumber, estimatedArrival } = req.body;
 
+    const allowedStatuses = [
+      "Pending",
+      "In Transit",
+      "Delivered",
+      "Delayed",
+    ];
+
+    if (!allowedStatuses.includes(status)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid delivery status",
+      });
+    }
+
     const delivery = await DeliveryStatus.findOneAndUpdate(
       { orderId },
       {
@@ -77,10 +104,29 @@ router.put("/logistics/delivery-status/:orderId", async (req, res) => {
       { new: true, upsert: true }
     );
 
+    const updatedOrder = await Order.findOneAndUpdate(
+      { id: orderId },
+      { status },
+      { new: true }
+    );
+
+    if (!updatedOrder) {
+      return res.status(404).json({
+        success: false,
+        message:
+          "Delivery status saved, but matching order was not found.",
+        data: delivery,
+      });
+    }
+
     res.status(200).json({
       success: true,
-      message: "Delivery status updated successfully",
-      data: delivery,
+      message:
+        "Delivery status and order status updated successfully",
+      data: {
+        delivery,
+        order: updatedOrder,
+      },
     });
   } catch (error) {
     res.status(500).json({
@@ -91,6 +137,11 @@ router.put("/logistics/delivery-status/:orderId", async (req, res) => {
   }
 });
 
+// ===============================
+// DEMAND FORECASTING SUBSYSTEM
+// ===============================
+
+// Demand Forecasting can send recommendations to your system
 router.post("/forecasting/recommendations", async (req, res) => {
   try {
     const recommendation = await StockRecommendation.create(req.body);
@@ -109,6 +160,7 @@ router.post("/forecasting/recommendations", async (req, res) => {
   }
 });
 
+// Your system can fetch saved local recommendations
 router.get("/forecasting/recommendations", async (req, res) => {
   try {
     const recommendations = await StockRecommendation.find().sort({
@@ -125,6 +177,71 @@ router.get("/forecasting/recommendations", async (req, res) => {
       success: false,
       message: "Failed to fetch recommendations",
       error: error.message,
+    });
+  }
+});
+
+// Your system fetches recommendations from Demand Forecasting API,
+// saves them to MongoDB, then returns the saved records
+router.get("/forecasting/external-recommendations", async (req, res) => {
+  try {
+    const response = await axios.get(
+      "https://itmc-321-admin-analytics.vercel.app/api/pricing/recommendations",
+      {
+        headers: {
+          "x-api-key":
+            "de64be2f743f3ce12be78cd01e85b8afd3fd2425cd66c8837826e91233ddf1a0",
+        },
+      }
+    );
+
+    const externalData = Array.isArray(response.data)
+      ? response.data
+      : response.data.data || response.data.recommendations || [];
+
+    for (const rec of externalData) {
+      await StockRecommendation.findOneAndUpdate(
+        {
+          item: rec.item,
+          category: rec.category,
+        },
+        {
+          item: rec.item,
+          category: rec.category,
+          recommendedStock:
+            rec.recommendedStock ||
+            rec.recommended_stock ||
+            rec.quantity ||
+            rec.qty ||
+            0,
+          reason: rec.reason || rec.description || "",
+          generatedBy:
+            rec.generatedBy || "Demand Forecasting Subsystem",
+        },
+        {
+          upsert: true,
+          new: true,
+        }
+      );
+    }
+
+    const savedRecommendations =
+      await StockRecommendation.find().sort({
+        createdAt: -1,
+      });
+
+    res.status(200).json({
+      success: true,
+      message:
+        "External recommendations fetched and saved successfully",
+      data: savedRecommendations,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message:
+        "Failed to fetch external recommendations",
+      error: error.response?.data || error.message,
     });
   }
 });

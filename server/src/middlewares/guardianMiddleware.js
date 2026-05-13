@@ -1,4 +1,5 @@
 const { Engine } = require("gerardian");
+const GuardianAlert = require("../models/GuardianAlert");
 
 const security = new Engine({
   riskThreshold: 75,
@@ -20,6 +21,17 @@ const guardianMiddleware = async (req, res, next) => {
     if (!deliveryDate) issues.push("Delivery date is required.");
 
     if (issues.length > 0) {
+      await GuardianAlert.create({
+        orderId: id,
+        supplier,
+        item,
+        qty: Number(qty),
+        category,
+        status: "Blocked",
+        reason: "Validation failed",
+        issues,
+      });
+
       return res.status(400).json({
         success: false,
         message: "Guardian blocked this order.",
@@ -39,10 +51,34 @@ const guardianMiddleware = async (req, res, next) => {
     });
 
     if (result.status === "blocked") {
+      await GuardianAlert.create({
+        orderId: id,
+        supplier,
+        item,
+        qty: Number(qty),
+        category,
+        status: "Blocked",
+        reason: "High-risk transaction",
+        guardianResult: result,
+      });
+
       return res.status(403).json({
         success: false,
         message: "Gerardian blocked this high-risk order.",
         guardian: result,
+      });
+    }
+
+    if (Number(qty) >= 100) {
+      await GuardianAlert.create({
+        orderId: id,
+        supplier,
+        item,
+        qty: Number(qty),
+        category,
+        status: "Flagged",
+        reason: "High quantity order monitored by Guardian",
+        guardianResult: result,
       });
     }
 

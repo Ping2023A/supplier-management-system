@@ -4,6 +4,12 @@ import "../../styles/settings.css";
 
 const SettingsPage = () => {
   const [users, setUsers] = useState([]);
+  const [orders, setOrders] = useState([]);
+  const [deliveries, setDeliveries] = useState([]);
+  const [suppliers, setSuppliers] = useState([]);
+  const [recommendations, setRecommendations] = useState([]);
+  const [guardianAlerts, setGuardianAlerts] = useState([]);
+
   const [modal, setModal] = useState(null);
   const [selectedUser, setSelectedUser] = useState(null);
 
@@ -15,26 +21,140 @@ const SettingsPage = () => {
     status: "Active",
   });
 
-  const API_URL =
-    import.meta.env.VITE_API_URL || "http://localhost:5000";
+  const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
+
+  const getAuthHeader = () => {
+    const token = localStorage.getItem("token");
+
+    return {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    };
+  };
 
   useEffect(() => {
     fetchUsers();
+    fetchSettingsData();
+
+    const interval = setInterval(() => {
+      fetchSettingsData();
+    }, 3000);
+
+    return () => clearInterval(interval);
   }, []);
 
   const fetchUsers = async () => {
     try {
-      const token = localStorage.getItem("token");
-
-      const res = await axios.get(`${API_URL}/api/users`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
+      const res = await axios.get(`${API_URL}/api/users`, getAuthHeader());
       setUsers(res.data.data || []);
     } catch (err) {
       console.error("Fetch users error:", err);
+    }
+  };
+
+  const fetchSettingsData = async () => {
+    try {
+      const [directOrderRes, integrationOrderRes] =
+        await Promise.allSettled([
+          axios.get(`${API_URL}/api/orders`, getAuthHeader()),
+          axios.get(`${API_URL}/api/integration/inventory/orders`),
+        ]);
+
+      const directOrders =
+        directOrderRes.status === "fulfilled"
+          ? directOrderRes.value.data.data ||
+            directOrderRes.value.data.orders ||
+            directOrderRes.value.data ||
+            []
+          : [];
+
+      const integrationOrders =
+        integrationOrderRes.status === "fulfilled"
+          ? integrationOrderRes.value.data.data ||
+            integrationOrderRes.value.data.orders ||
+            integrationOrderRes.value.data ||
+            []
+          : [];
+
+      const mergedOrders = [...directOrders, ...integrationOrders];
+
+      const uniqueOrders = mergedOrders.filter(
+        (order, index, self) =>
+          index ===
+          self.findIndex(
+            (o) =>
+              String(o.id || o.orderId || o._id) ===
+              String(order.id || order.orderId || order._id)
+          )
+      );
+
+      setOrders(Array.isArray(uniqueOrders) ? uniqueOrders : []);
+    } catch (err) {
+      console.error("Orders fetch error:", err);
+      setOrders([]);
+    }
+
+    try {
+      const deliveryRes = await axios.get(
+        `${API_URL}/api/integration/logistics/delivery-status`
+      );
+
+      setDeliveries(deliveryRes.data.data || []);
+    } catch (err) {
+      console.error("Deliveries fetch error:", err);
+      setDeliveries([]);
+    }
+
+    try {
+      const supplierRes = await axios.get(
+        `${API_URL}/api/suppliers`,
+        getAuthHeader()
+      );
+
+      const supplierData =
+        supplierRes.data.data ||
+        supplierRes.data.suppliers ||
+        supplierRes.data ||
+        [];
+
+      setSuppliers(Array.isArray(supplierData) ? supplierData : []);
+    } catch (err) {
+      console.error("Suppliers fetch error:", err);
+      setSuppliers([]);
+    }
+
+    try {
+      const recommendationRes = await axios.get(
+        `${API_URL}/api/integration/forecasting/external-recommendations`
+      );
+
+      setRecommendations(recommendationRes.data.data || []);
+    } catch (err) {
+      console.error("Forecasting fetch error:", err);
+
+      try {
+        const localRecommendationRes = await axios.get(
+          `${API_URL}/api/integration/forecasting/recommendations`
+        );
+
+        setRecommendations(localRecommendationRes.data.data || []);
+      } catch (localErr) {
+        console.error("Local recommendations fetch error:", localErr);
+        setRecommendations([]);
+      }
+    }
+
+    try {
+      const guardianRes = await axios.get(
+        `${API_URL}/api/settings/guardian-alerts`,
+        getAuthHeader()
+      );
+
+      setGuardianAlerts(guardianRes.data.data || []);
+    } catch (err) {
+      console.error("Guardian alerts fetch error:", err);
+      setGuardianAlerts([]);
     }
   };
 
@@ -76,15 +196,10 @@ const SettingsPage = () => {
     }
 
     try {
-      const token = localStorage.getItem("token");
-
-      await axios.post(`${API_URL}/api/users`, form, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      await axios.post(`${API_URL}/api/users`, form, getAuthHeader());
 
       await fetchUsers();
+      await fetchSettingsData();
       setModal(null);
     } catch (err) {
       alert(err.response?.data?.message || "Failed to create user");
@@ -98,8 +213,6 @@ const SettingsPage = () => {
     }
 
     try {
-      const token = localStorage.getItem("token");
-
       await axios.put(
         `${API_URL}/api/users/${selectedUser._id}`,
         {
@@ -108,14 +221,11 @@ const SettingsPage = () => {
           role: form.role,
           status: form.status,
         },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
+        getAuthHeader()
       );
 
       await fetchUsers();
+      await fetchSettingsData();
 
       setModal(null);
       setSelectedUser(null);
@@ -126,18 +236,13 @@ const SettingsPage = () => {
 
   const deleteUser = async () => {
     try {
-      const token = localStorage.getItem("token");
-
       await axios.delete(
         `${API_URL}/api/users/${selectedUser._id}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
+        getAuthHeader()
       );
 
       await fetchUsers();
+      await fetchSettingsData();
 
       setModal(null);
       setSelectedUser(null);
@@ -146,15 +251,73 @@ const SettingsPage = () => {
     }
   };
 
+  const auditLogs = [
+    ...orders.map((o) => ({
+      user: "Admin",
+      action: `Created Order ${o.id || o.orderId || o._id}`,
+      date: o.createdAt || o.updatedAt || o.deliveryDate,
+    })),
+
+    ...suppliers.map((s) => ({
+      user: "Admin",
+      action: `Created Supplier ${s.name || "Unknown Supplier"}`,
+      date: s.createdAt || s.updatedAt,
+    })),
+
+    ...deliveries.map((d) => ({
+      user: "Logistics",
+      action: `Updated Delivery ${d.orderId || d.order} to ${
+        d.status || "Pending"
+      }`,
+      date: d.updatedAt || d.createdAt || d.estimatedArrival,
+    })),
+
+    ...recommendations.map((r) => ({
+      user: "Demand Forecasting",
+      action: `Generated Recommendation for ${r.item}`,
+      date: r.updatedAt || r.createdAt,
+    })),
+
+    ...users.map((u) => ({
+      user: "Admin",
+      action: `Added User ${u.name || u.email}`,
+      date: u.createdAt || u.updatedAt,
+    })),
+
+    ...guardianAlerts.map((g) => ({
+      user: "Guardian",
+      action: `${g.status || "Flagged"} Order ${
+        g.orderId || "Unknown Order"
+      } - ${g.reason || "Security monitoring"}`,
+      date: g.createdAt || g.updatedAt,
+    })),
+  ]
+    .filter((log) => log.action)
+    .sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0))
+    .slice(0, 8);
+
+  const suspiciousOrders = guardianAlerts.filter(
+    (a) => a.status === "Flagged"
+  );
+
+  const blockedTransactions = guardianAlerts.filter(
+    (a) => a.status === "Blocked"
+  );
+
+  const guardianAlertsList = guardianAlerts.map((alert) => ({
+    type: alert.status || "Guardian Alert",
+    message: `${alert.orderId || "Unknown Order"} - ${
+      alert.reason || "Security monitoring"
+    }`,
+  }));
+
   return (
     <div className="settings-page">
       <div className="settings-grid">
         {/* USER MANAGEMENT */}
         <div className="settings-card">
           <div className="settings-card-header">
-            <div className="settings-card-title">
-              User Management
-            </div>
+            <div className="settings-card-title">User Management</div>
 
             <button
               className="add-user-btn inside-card"
@@ -276,9 +439,7 @@ const SettingsPage = () => {
 
         {/* AUDIT LOGS */}
         <div className="settings-card audit-card">
-          <div className="settings-card-title">
-            Audit Logs
-          </div>
+          <div className="settings-card-title">Audit Logs</div>
 
           <table className="audit-table">
             <thead>
@@ -290,29 +451,25 @@ const SettingsPage = () => {
             </thead>
 
             <tbody>
-              <tr>
-                <td>Admin</td>
-                <td>Created Order</td>
-                <td>Today</td>
-              </tr>
-
-              <tr>
-                <td>Manager</td>
-                <td>Updated Delivery</td>
-                <td>Today</td>
-              </tr>
-
-              <tr>
-                <td>Staff</td>
-                <td>Generated Report</td>
-                <td>Today</td>
-              </tr>
-
-              <tr>
-                <td>Admin</td>
-                <td>Added User</td>
-                <td>Today</td>
-              </tr>
+              {auditLogs.length > 0 ? (
+                auditLogs.map((log, index) => (
+                  <tr key={index}>
+                    <td>{log.user}</td>
+                    <td>{log.action}</td>
+                    <td>
+                      {log.date
+                        ? new Date(log.date).toLocaleDateString()
+                        : "N/A"}
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan="3" className="empty-cell">
+                    No audit logs found
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>
@@ -326,14 +483,14 @@ const SettingsPage = () => {
           <div className="fraud-row">
             Suspicious Orders:
             <span className="warning-text">
-              2 flagged
+              {suspiciousOrders.length} flagged
             </span>
           </div>
 
           <div className="fraud-row">
             Blocked Transactions:
             <span className="success-text">
-              5 blocked
+              {blockedTransactions.length} blocked
             </span>
           </div>
 
@@ -350,11 +507,7 @@ const SettingsPage = () => {
       {(modal === "addUser" || modal === "editUser") && (
         <div className="modal-overlay">
           <div className="report-modal">
-            <h3>
-              {modal === "addUser"
-                ? "Add User"
-                : "Edit User"}
-            </h3>
+            <h3>{modal === "addUser" ? "Add User" : "Edit User"}</h3>
 
             <input
               className="search-input"
@@ -427,19 +580,12 @@ const SettingsPage = () => {
             <div className="modal-buttons">
               <button
                 className="save-btn"
-                onClick={
-                  modal === "addUser"
-                    ? saveUser
-                    : updateUser
-                }
+                onClick={modal === "addUser" ? saveUser : updateUser}
               >
                 Save
               </button>
 
-              <button
-                className="close-btn"
-                onClick={() => setModal(null)}
-              >
+              <button className="close-btn" onClick={() => setModal(null)}>
                 Close
               </button>
             </div>
@@ -455,25 +601,15 @@ const SettingsPage = () => {
 
             <p>
               Are you sure you want to delete{" "}
-              <b>
-                {selectedUser.name ||
-                  selectedUser.email}
-              </b>
-              ?
+              <b>{selectedUser.name || selectedUser.email}</b>?
             </p>
 
             <div className="modal-buttons">
-              <button
-                className="save-btn danger-btn"
-                onClick={deleteUser}
-              >
+              <button className="save-btn danger-btn" onClick={deleteUser}>
                 Delete
               </button>
 
-              <button
-                className="close-btn"
-                onClick={() => setModal(null)}
-              >
+              <button className="close-btn" onClick={() => setModal(null)}>
                 Cancel
               </button>
             </div>
@@ -483,14 +619,9 @@ const SettingsPage = () => {
 
       {/* MODALS */}
       {modal === "passwordPolicy" && (
-        <SimpleModal
-          title="Password Policy"
-          onClose={() => setModal(null)}
-        >
+        <SimpleModal title="Password Policy" onClose={() => setModal(null)}>
           <p>Minimum 8 characters recommended.</p>
-          <p>
-            Password should include letters and numbers.
-          </p>
+          <p>Password should include letters and numbers.</p>
         </SimpleModal>
       )}
 
@@ -500,9 +631,7 @@ const SettingsPage = () => {
           onClose={() => setModal(null)}
         >
           <p>Status: Disabled</p>
-          <p>
-            2FA configuration can be connected later.
-          </p>
+          <p>2FA configuration can be connected later.</p>
         </SimpleModal>
       )}
 
@@ -512,10 +641,7 @@ const SettingsPage = () => {
           onClose={() => setModal(null)}
         >
           <p>Status: Active</p>
-          <p>
-            Guardian is checking risky order
-            transactions.
-          </p>
+          <p>Guardian is checking risky order transactions.</p>
         </SimpleModal>
       )}
 
@@ -524,9 +650,15 @@ const SettingsPage = () => {
           title="System Access Logs"
           onClose={() => setModal(null)}
         >
-          <p>Admin logged in today.</p>
-          <p>User management module accessed.</p>
-          <p>Settings page viewed.</p>
+          {auditLogs.length > 0 ? (
+            auditLogs.slice(0, 5).map((log, index) => (
+              <p key={index}>
+                {log.user}: {log.action}
+              </p>
+            ))
+          ) : (
+            <p>No access logs found.</p>
+          )}
         </SimpleModal>
       )}
 
@@ -535,23 +667,22 @@ const SettingsPage = () => {
           title="Guardian Fraud Alerts"
           onClose={() => setModal(null)}
         >
-          <p>Suspicious Orders: 2 flagged</p>
-          <p>Blocked Transactions: 5 blocked</p>
-          <p>
-            High quantity orders are monitored by
-            Guardian.
-          </p>
+          {guardianAlertsList.length > 0 ? (
+            guardianAlertsList.map((alert, index) => (
+              <p key={index}>
+                <b>{alert.type}:</b> {alert.message}
+              </p>
+            ))
+          ) : (
+            <p>No fraud alerts detected.</p>
+          )}
         </SimpleModal>
       )}
     </div>
   );
 };
 
-const SimpleModal = ({
-  title,
-  children,
-  onClose,
-}) => {
+const SimpleModal = ({ title, children, onClose }) => {
   return (
     <div className="modal-overlay">
       <div className="report-modal">
@@ -560,10 +691,7 @@ const SimpleModal = ({
         {children}
 
         <div className="modal-buttons">
-          <button
-            className="close-btn"
-            onClick={onClose}
-          >
+          <button className="close-btn" onClick={onClose}>
             Close
           </button>
         </div>

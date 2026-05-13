@@ -44,30 +44,39 @@ const OrdersPage = () => {
     };
   };
 
-  // FETCH ORDERS
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+
+    setForm((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  // FETCH ORDERS WITH DELIVERY STATUS
   useEffect(() => {
     axios
-      .get(`${API_URL}/api/orders`, getAuthHeader())
+      .get(`${API_URL}/api/integration/logistics/delivery-status`)
       .then((res) => {
-        const orderData = res.data.data || res.data;
+        const orderData = (res.data.data || []).map((d) => ({
+          id: d.orderId,
+          supplier: d.supplier,
+          item: d.item,
+          qty: d.qty,
+          status: d.status || "Pending",
+          category: d.category,
+          deliveryDate: d.estimatedArrival,
+          trackingNumber: d.trackingNumber,
+        }));
+
         setOrders(orderData);
       })
       .catch((err) => console.error("Error fetching orders:", err));
   }, [API_URL]);
 
-  // HANDLE INPUT CHANGE
-  const handleChange = (e) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
-  };
-
   // CREATE ORDER
   const createOrder = async () => {
-    if (
-      !form.supplier ||
-      !form.item ||
-      !form.qty ||
-      !form.deliveryDate
-    ) {
+    if (!form.supplier || !form.item || !form.qty || !form.deliveryDate) {
       alert("Please fill in all required fields.");
       return;
     }
@@ -128,9 +137,7 @@ const OrdersPage = () => {
       const updatedOrder = res.data.data || res.data;
 
       setOrders(
-        orders.map((o) =>
-          o.id === selectedOrder.id ? updatedOrder : o
-        )
+        orders.map((o) => (o.id === selectedOrder.id ? updatedOrder : o))
       );
 
       setShowEdit(false);
@@ -143,10 +150,7 @@ const OrdersPage = () => {
   // DELETE ORDER
   const deleteOrder = async (id) => {
     try {
-      await axios.delete(
-        `${API_URL}/api/orders/${id}`,
-        getAuthHeader()
-      );
+      await axios.delete(`${API_URL}/api/orders/${id}`, getAuthHeader());
 
       setOrders(orders.filter((o) => o.id !== id));
     } catch (err) {
@@ -161,8 +165,7 @@ const OrdersPage = () => {
       String(v).toLowerCase().includes(search.toLowerCase())
     );
 
-    const matchFilter =
-      filter === "All" || o.status === filter;
+    const matchFilter = filter === "All" || o.status === filter;
 
     return matchSearch && matchFilter;
   });
@@ -171,10 +174,7 @@ const OrdersPage = () => {
     <div className="orders-page">
       {/* TOP */}
       <div className="orders-top">
-        <button
-          className="add-order-btn"
-          onClick={() => setShowCreate(true)}
-        >
+        <button className="add-order-btn" onClick={() => setShowCreate(true)}>
           Create Order
         </button>
 
@@ -202,24 +202,14 @@ const OrdersPage = () => {
 
       {/* SUMMARY */}
       <div className="orders-summary">
-        <div className="order-box blue">
-          Total: {orders.length}
-        </div>
+        <div className="order-box blue">Total: {orders.length}</div>
 
         <div className="order-box orange">
-          Pending:{" "}
-          {
-            orders.filter((o) => o.status === "Pending")
-              .length
-          }
+          Pending: {orders.filter((o) => o.status === "Pending").length}
         </div>
 
         <div className="order-box green">
-          Delivered:{" "}
-          {
-            orders.filter((o) => o.status === "Delivered")
-              .length
-          }
+          Delivered: {orders.filter((o) => o.status === "Delivered").length}
         </div>
       </div>
 
@@ -240,7 +230,7 @@ const OrdersPage = () => {
 
           <tbody>
             {filtered.map((o) => (
-              <tr key={o.id}>
+              <tr key={`${o.id}-${o.status}`}>
                 <td>{o.id}</td>
                 <td>{o.supplier}</td>
                 <td>{o.item}</td>
@@ -293,21 +283,13 @@ const OrdersPage = () => {
             <div className="modal-group">
               <label>Supplier</label>
 
-              <input
-                name="supplier"
-                value={form.supplier}
-                onChange={handleChange}
-              />
+              <input name="supplier" value={form.supplier} onChange={handleChange} />
             </div>
 
             <div className="modal-group">
               <label>Item</label>
 
-              <input
-                name="item"
-                value={form.item}
-                onChange={handleChange}
-              />
+              <input name="item" value={form.item} onChange={handleChange} />
             </div>
 
             <div className="modal-group">
@@ -324,11 +306,7 @@ const OrdersPage = () => {
             <div className="modal-group">
               <label>Category</label>
 
-              <select
-                name="category"
-                value={form.category}
-                onChange={handleChange}
-              >
+              <select name="category" value={form.category} onChange={handleChange}>
                 <option>Clothing and Apparel</option>
                 <option>Home and Living</option>
                 <option>Electronics</option>
@@ -347,17 +325,11 @@ const OrdersPage = () => {
             </div>
 
             <div className="modal-buttons">
-              <button
-                className="save-btn"
-                onClick={createOrder}
-              >
+              <button className="save-btn" onClick={createOrder}>
                 Save
               </button>
 
-              <button
-                className="close-btn"
-                onClick={() => setShowCreate(false)}
-              >
+              <button className="close-btn" onClick={() => setShowCreate(false)}>
                 Cancel
               </button>
             </div>
@@ -397,16 +369,12 @@ const OrdersPage = () => {
               </p>
 
               <p>
-                <b>Delivery Date:</b>{" "}
-                {selectedOrder.deliveryDate}
+                <b>Delivery Date:</b> {selectedOrder.deliveryDate}
               </p>
             </div>
 
             <div className="modal-buttons">
-              <button
-                className="close-btn"
-                onClick={() => setShowView(false)}
-              >
+              <button className="close-btn" onClick={() => setShowView(false)}>
                 Close
               </button>
             </div>
@@ -497,17 +465,11 @@ const OrdersPage = () => {
             </div>
 
             <div className="modal-buttons">
-              <button
-                className="save-btn"
-                onClick={updateOrder}
-              >
+              <button className="save-btn" onClick={updateOrder}>
                 Save
               </button>
 
-              <button
-                className="close-btn"
-                onClick={() => setShowEdit(false)}
-              >
+              <button className="close-btn" onClick={() => setShowEdit(false)}>
                 Cancel
               </button>
             </div>
@@ -517,4 +479,5 @@ const OrdersPage = () => {
     </div>
   );
 };
+
 export default OrdersPage;
